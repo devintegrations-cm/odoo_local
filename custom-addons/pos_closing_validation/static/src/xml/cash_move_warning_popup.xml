@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<templates id="template" xml:space="preserve">
+
+    <t t-name="pos_closing_validation.CashMoveWarningPopup">
+        <div class="popup popup-confirm">
+            <div class="popup-header">
+                <t t-esc="props.title"/>
+            </div>
+            <div class="body">
+                <p><t t-esc="props.body"/></p>
+            </div>
+            <div class="footer">
+                <div class="button highlight" t-on-click="confirm">
+                    <t t-esc="props.confirmLabel"/>
+                </div>
+                <div class="button" t-on-click="cancel">
+                    <t t-esc="props.cancelLabel"/>
+                </div>
+            </div>
+        </div>
+    </t>
+
+</templates>

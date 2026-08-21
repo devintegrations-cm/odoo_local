@@ -1,0 +1,43 @@
+services:
+  web:
+    image: odoo:17.0
+    depends_on:
+      - db
+    command: >
+      odoo -c /etc/odoo/odoo.conf
+      --without-demo=all
+    ports:
+      - "8100:8069"  # Cambiado de 8099 a 8100 para evitar conflictos
+    volumes:
+      - odoo17-web-data:/var/lib/odoo  # Cambiado para diferenciar el volumen de Odoo 17
+      - ./config:/etc/odoo
+      #- ./addons:/mnt/extra-addons/custom-addons
+      - ./custom-addons:/mnt/extra-addons/custom-addons
+    networks:
+      - webnet
+    environment:
+      - HOST=db
+      - PORT=5432
+      - USER=odoo
+      - PASSWORD=odoo
+
+  db:
+    image: postgres:16
+    ports:
+      - "6433:5432"  # Cambiado de 6432 a 6433 para evitar conflictos
+    environment:
+      - POSTGRES_DB=postgres
+      - POSTGRES_PASSWORD=odoo
+      - POSTGRES_USER=odoo
+      - PGDATA=/var/lib/postgresql/data/pgdata
+    volumes:
+      - odoo17-db-data:/var/lib/postgresql/data  # Cambiado para diferenciar el volumen de Odoo 17
+    networks:
+      - webnet
+
+volumes:
+  odoo17-web-data:  # Nombre de volumen cambiado
+  odoo17-db-data:  # Nombre de volumen cambiado
+
+networks:
+  webnet:
