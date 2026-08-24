@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<templates id="template" xml:space="preserve">
+
+    <t t-name="pos_closing_validation.RescueSessionWarningPopup">
+        <div class="popup popup-confirm">
+            <div class="popup-header">
+                Sesión de Rescate
+            </div>
+            <div class="body">
+                <p>
+                    Esta sesión es de rescate. Debe actualizar la página antes
+                    de continuar con esta operación.
+                </p>
+            </div>
+            <div class="footer">
+                <div class="button highlight" t-on-click="onReload">
+                    Actualizar Página
+                </div>
+            </div>
+        </div>
+    </t>
+
+</templates>

@@ -16,14 +16,31 @@ patch(CashMovePopup.prototype, {
             limit: this.pos.config.maximum_cash_in_out_moves || 0,
         };
 
+        this.closingValidation = {
+            is_rescue: false,
+            expected_cash: 0,
+            cash_move_count: 0,
+        };
+
         this.state.isLimitReached = false;
 
         onWillStart(async () => {
-            this.cashMoveControl = await this.orm.call(
-                "pos.session",
-                "get_cash_in_out_control_data",
-                [[this.pos.pos_session.id]]
-            );
+            const [controlData, closingInfo] = await Promise.all([
+                this.orm.call(
+                    "pos.session",
+                    "get_cash_in_out_control_data",
+                    [[this.pos.pos_session.id]]
+                ),
+                this.orm.call(
+                    "pos.session",
+                    "get_closing_validation_info",
+                    [[this.pos.pos_session.id]]
+                ),
+            ]);
+
+            this.cashMoveControl = controlData;
+            this.closingValidation = closingInfo;
+
             this.state.isLimitReached =
                 this.cashMoveControl.count >= this.cashMoveControl.limit;
         });

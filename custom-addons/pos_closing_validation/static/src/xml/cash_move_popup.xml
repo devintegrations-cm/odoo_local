@@ -2,10 +2,53 @@
 
 <templates id="template" xml:space="preserve">
 
+    <!-- Cash move popup extension -->
     <t t-inherit="point_of_sale.CashMovePopup" t-inherit-mode="extension">
 
+        <!-- Rescue banner + validation info before the form -->
         <xpath expr="//div[contains(@class, 'form-floating')]" position="before">
 
+            <div t-if="closingValidation.is_rescue"
+                 class="alert alert-warning mt-2 mb-2"
+                 role="alert">
+                <strong>SESIÓN DE RECUPERACIÓN</strong>
+                <div class="mt-1 text-muted small">
+                    Esta sesión está recuperando operaciones de una sesión anterior.
+                    Verifique que todos los movimientos se sincronicen correctamente.
+                </div>
+            </div>
+
+            <!-- Cash summary from snapshot -->
+            <div class="mt-2 mb-2 p-2 border rounded">
+                <div class="fw-bold mb-1 small">
+                    Resumen de efectivo
+                </div>
+                <div class="d-flex justify-content-between small">
+                    <span class="text-muted">Apertura:</span>
+                    <span t-esc="env.utils.formatCurrency(closingValidation.opening_cash || 0)"/>
+                </div>
+                <div class="d-flex justify-content-between small"
+                     t-if="closingValidation.cash_sales > 0">
+                    <span class="text-muted">Ventas en efectivo:</span>
+                    <span t-esc="env.utils.formatCurrency(closingValidation.cash_sales || 0)"/>
+                </div>
+                <div class="d-flex justify-content-between small text-success"
+                     t-if="closingValidation.cash_in > 0">
+                    <span class="text-muted">Cash In:</span>
+                    <span t-esc="env.utils.formatCurrency(closingValidation.cash_in || 0)"/>
+                </div>
+                <div class="d-flex justify-content-between small text-danger"
+                     t-if="closingValidation.cash_out > 0">
+                    <span class="text-muted">Cash Out:</span>
+                    <span t-esc="env.utils.formatCurrency(closingValidation.cash_out || 0)"/>
+                </div>
+                <div class="d-flex justify-content-between small fw-bold border-top mt-1 pt-1">
+                    <span>Efectivo esperado:</span>
+                    <span t-esc="env.utils.formatCurrency(closingValidation.expected_cash || 0)"/>
+                </div>
+            </div>
+
+            <!-- Limit reached alert -->
             <div t-if="state.isLimitReached"
                  class="alert alert-danger mt-2 mb-2"
                  role="alert">
@@ -17,6 +60,7 @@
 
         </xpath>
 
+        <!-- Movement counter after the form -->
         <xpath expr="//div[contains(@class, 'form-floating')]" position="after">
 
             <div class="text-muted small mt-2 text-end">
@@ -28,6 +72,7 @@
 
         </xpath>
 
+        <!-- Disable confirm button when limit reached -->
         <xpath expr="//button[contains(@class, 'confirm')]" position="attributes">
             <attribute name="t-att-disabled">
                 !env.utils.isValidFloat(state.amount) || state.isLimitReached

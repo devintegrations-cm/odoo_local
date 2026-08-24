@@ -31,6 +31,18 @@
                         automáticamente al final del mensaje.
                     </div>
                 </div>
+                <div class="mt16">
+                    <field name="pos_enable_rescue_session_validation"/>
+                    <label
+                        for="pos_enable_rescue_session_validation"
+                        string="Validar sesiones de rescate"
+                        class="fw-normal"
+                    />
+                    <div class="text-muted mt8">
+                        Muestra advertencias cuando existan sesiones de rescate
+                        pendientes al cerrar la sesión normal.
+                    </div>
+                </div>
             </xpath>
 
         </field>

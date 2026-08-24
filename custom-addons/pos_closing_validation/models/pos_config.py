@@ -22,6 +22,13 @@ class PosConfig(models.Model):
              "Déjelo vacío para usar el mensaje por defecto.",
     )
 
+    enable_rescue_session_validation = fields.Boolean(
+        string="Validar sesiones de rescate",
+        default=True,
+        help="Mostrar advertencias cuando existan sesiones de rescate pendientes "
+             "al cerrar la sesión normal.",
+    )
+
     @api.constrains("maximum_cash_in_out_moves")
     def _check_maximum_cash_in_out_moves(self):
         """Ensure the configured limit is at least 1."""
@@ -52,4 +59,11 @@ class ResConfigSettings(models.TransientModel):
              "autorizado al cerrar la sesión. Solo escriba el texto; los valores de la "
              "diferencia y del máximo autorizado se añaden automáticamente al final. "
              "Déjelo vacío para usar el mensaje por defecto.",
+    )
+
+    pos_enable_rescue_session_validation = fields.Boolean(
+        related="pos_config_id.enable_rescue_session_validation",
+        readonly=False,
+        string="Validar sesiones de rescate",
+        help="Mostrar advertencias cuando existan sesiones de rescate pendientes.",
     )
