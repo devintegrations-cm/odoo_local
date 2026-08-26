@@ -21,8 +21,14 @@ class TestPosInventoryQueue(TransactionCase):
             'list_price': 10.0,
         })
 
-        self.source_location = self.picking_type.default_location_src_id
-        self.dest_location = self.picking_type.default_location_dest_id
+        self.source_location = (
+            self.picking_type.default_location_src_id
+            or self.warehouse.lot_stock_id
+        )
+        self.dest_location = (
+            self.picking_type.default_location_dest_id
+            or self.env['stock.warehouse']._get_partner_locations()[0]
+        )
 
         self.env['stock.quant'].with_context(inventory_mode=True).create({
             'product_id': self.product.id,
