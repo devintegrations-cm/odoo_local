@@ -1,5 +1,4 @@
 import logging
-from itertools import groupby
 
 from odoo import api, models
 from odoo.exceptions import UserError, ValidationError

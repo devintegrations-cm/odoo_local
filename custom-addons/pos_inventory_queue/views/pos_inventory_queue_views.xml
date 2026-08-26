@@ -40,7 +40,7 @@
                             string="Retry"
                             type="object"
                             class="btn-primary"
-                            invisible="state != 'failed_permanent'" />
+                            invisible="state not in ('failed', 'failed_permanent')" />
                 </header>
                 <sheet>
                     <div class="oe_title">

@@ -11,7 +11,6 @@
         This module intercepts the picking creation flow for POS real-time pickings
         and serializes their processing through a persistent queue using
         PostgreSQL FOR UPDATE SKIP LOCKED for atomic claim.
-
     """,
     "author": "Miguel Bolivar, Libertario Coffee",
     "website": "https://www.libertariocoffee.com",
