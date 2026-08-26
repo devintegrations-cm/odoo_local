@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<odoo noupdate="1">
+    <record id="ir_cron_cleanup_pos_inventory_queue" model="ir.cron">
+        <field name="name">POS Inventory Queue: Cleanup done items</field>
+        <field name="model_id" ref="model_pos_inventory_queue" />
+        <field name="state">code</field>
+        <field name="code">model._cron_cleanup_done_items(days=30)</field>
+        <field name="interval_number">7</field>
+        <field name="interval_type">days</field>
+        <field name="numbercall">-1</field>
+        <field name="active">True</field>
+    </record>
+</odoo>

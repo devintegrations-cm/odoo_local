@@ -1,0 +1,147 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<odoo>
+
+    <!-- ============================================================ -->
+    <!-- TREE VIEW                                                    -->
+    <!-- ============================================================ -->
+    <record id="pos_inventory_queue_view_tree" model="ir.ui.view">
+        <field name="name">pos.inventory.queue.tree</field>
+        <field name="model">pos.inventory.queue</field>
+        <field name="arch" type="xml">
+            <tree decoration-info="state == 'pending'"
+                  decoration-warning="state == 'processing'"
+                  decoration-success="state == 'done'"
+                  decoration-danger="state in ('failed', 'failed_permanent')"
+                  create="false"
+                  edit="false">
+                <field name="name" />
+                <field name="sequence" />
+                <field name="picking_id" />
+                <field name="pos_order_id" />
+                <field name="state" />
+                <field name="retry_count" />
+                <field name="start_date" />
+                <field name="done_date" />
+                <field name="error_date" />
+            </tree>
+        </field>
+    </record>
+
+    <!-- ============================================================ -->
+    <!-- FORM VIEW                                                    -->
+    <!-- ============================================================ -->
+    <record id="pos_inventory_queue_view_form" model="ir.ui.view">
+        <field name="name">pos.inventory.queue.form</field>
+        <field name="model">pos.inventory.queue</field>
+        <field name="arch" type="xml">
+            <form create="false" edit="false">
+                <header>
+                    <button name="action_retry"
+                            string="Retry"
+                            type="object"
+                            class="btn-primary"
+                            invisible="state != 'failed_permanent'" />
+                </header>
+                <sheet>
+                    <div class="oe_title">
+                        <h1>
+                            <field name="name" readonly="1" />
+                        </h1>
+                    </div>
+                    <group>
+                        <group string="Queue">
+                            <field name="sequence" />
+                            <field name="state" />
+                            <field name="retry_count" />
+                        </group>
+                        <group string="References">
+                            <field name="picking_id" />
+                            <field name="pos_order_id" />
+                        </group>
+                    </group>
+                    <group string="Timing">
+                        <group>
+                            <field name="start_date" />
+                            <field name="done_date" />
+                            <field name="error_date" />
+                        </group>
+                    </group>
+                    <group string="Error"
+                           invisible="state not in ('failed', 'failed_permanent')">
+                        <field name="error_message" nolabel="1" readonly="1" />
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- ============================================================ -->
+    <!-- SEARCH VIEW                                                  -->
+    <!-- ============================================================ -->
+    <record id="pos_inventory_queue_view_search" model="ir.ui.view">
+        <field name="name">pos.inventory.queue.search</field>
+        <field name="model">pos.inventory.queue</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="name" />
+                <field name="picking_id" />
+                <field name="pos_order_id" />
+                <separator />
+                <filter name="pending"
+                        string="Pending"
+                        domain="[('state', '=', 'pending')]" />
+                <filter name="processing"
+                        string="Processing"
+                        domain="[('state', '=', 'processing')]" />
+                <filter name="done"
+                        string="Done"
+                        domain="[('state', '=', 'done')]" />
+                <filter name="failed"
+                        string="Failed"
+                        domain="[('state', 'in', ('failed', 'failed_permanent'))]" />
+                <separator />
+                <group expand="0" string="Group By">
+                    <filter name="group_state"
+                            string="State"
+                            context="{'group_by': 'state'}" />
+                    <filter name="group_picking"
+                            string="Picking"
+                            context="{'group_by': 'picking_id'}" />
+                    <filter name="group_pos_order"
+                            string="POS Order"
+                            context="{'group_by': 'pos_order_id'}" />
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <!-- ============================================================ -->
+    <!-- ACTION                                                       -->
+    <!-- ============================================================ -->
+    <record id="action_pos_inventory_queue" model="ir.actions.act_window">
+        <field name="name">POS Inventory Queue</field>
+        <field name="res_model">pos.inventory.queue</field>
+        <field name="view_mode">tree,form</field>
+        <field name="search_view_id" ref="pos_inventory_queue_view_search" />
+        <field name="context">{'search_default_pending': 1}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                No queue items
+            </p>
+            <p>
+                POS inventory queue items appear here when
+                real-time inventory pickings are being serialized.
+            </p>
+        </field>
+    </record>
+
+    <!-- ============================================================ -->
+    <!-- MENU                                                         -->
+    <!-- ============================================================ -->
+    <menuitem id="menu_pos_inventory_queue_root"
+              name="Inventory Queue"
+              parent="point_of_sale.menu_point_of_sale"
+              action="action_pos_inventory_queue"
+              sequence="99" />
+
+</odoo>
