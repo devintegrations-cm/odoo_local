@@ -7,6 +7,8 @@ patch(CashMovePopup.prototype, {
     setup() {
         super.setup(...arguments);
 
-        this.cashInOutMessage = this.pos.config.cash_in_out_message || "";
+        this.cashInOutMessage = this.pos.config.cash_in_out_message_enabled
+            ? (this.pos.config.cash_in_out_message || "")
+            : "";
     },
 });

@@ -269,7 +269,9 @@ def prepare_test_data(
         )
         print()
 
-        return initial_qty, product.id, source_location.id
+        picking_ids = [p[0] for p in created_pickings]
+
+        return initial_qty, product.id, source_location.id, picking_ids
 
 
 def worker(
@@ -413,6 +415,7 @@ def validate_results(
     template_id,
     initial_qty,
     expected_processed,
+    created_picking_ids,
 ):
     """
     Valida el resultado final desde una conexión nueva.
@@ -458,11 +461,7 @@ def validate_results(
 
         items = Queue.search(
             [
-                (
-                    "picking_id.origin",
-                    "like",
-                    f"QUEUE-CONCURRENCY-{session.name}-",
-                ),
+                ('picking_id', 'in', created_picking_ids),
             ],
             order="sequence, id",
         )
@@ -690,7 +689,7 @@ def main():
     # Crear pickings + queue.
     # -------------------------------------------------------------
 
-    initial_qty, product_id, location_id = (
+    initial_qty, product_id, location_id, picking_ids = (
         prepare_test_data(
             args.config,
             args.db,
@@ -751,6 +750,7 @@ def main():
         args.template_id,
         initial_qty,
         args.workers,
+        picking_ids,
     )
 
     print("=" * 70)

@@ -11,7 +11,11 @@
                 <setting
                     string="Cash In/Out Message"
                     help="Message displayed above the Reason field in the Cash In/Out popup.">
-                    <field name="cash_in_out_message"/>
+                    <field name="pos_cash_in_out_message_enabled"/>
+                    <div class="content-group mt8"
+                         invisible="not pos_cash_in_out_message_enabled">
+                        <field name="cash_in_out_message"/>
+                    </div>
                 </setting>
             </xpath>
 

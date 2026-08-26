@@ -94,7 +94,7 @@ class TestPosInventoryQueue(TransactionCase):
 
         item.action_retry()
 
-        self.assertEqual(item.state, 'pending')
+        self.assertEqual(item.state, 'done')
         self.assertEqual(item.retry_count, 0)
         self.assertFalse(item.error_message)
 

@@ -1,5 +1,5 @@
 {
-    "name": "POS Cash In/Out Message",
+    "name": "Cash In/Out Message",
     "version": "17.0.1.0.0",
     "category": "Point of Sale",
     "summary": "Display a configurable message in the Cash In/Out popup",
@@ -28,5 +28,5 @@ The message is configured per POS configuration.
         ],
     },
     "installable": True,
-    "application": True,
+    "application": False,
 }

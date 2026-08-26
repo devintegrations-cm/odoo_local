@@ -389,6 +389,7 @@ class PosInventoryQueue(models.Model):
     # -------------------------------------------------------------------------
 
     def action_retry(self):
+        retried = self.browse()
         for record in self:
             if record.state not in ('failed', 'failed_permanent'):
                 continue
@@ -399,8 +400,10 @@ class PosInventoryQueue(models.Model):
                 'error_date': False,
                 'error_message': False,
             })
+            retried |= record
 
-        self._process_queue()
+        if retried:
+            retried._process_queue()
 
     # -------------------------------------------------------------------------
     # CRON CLEANUP
