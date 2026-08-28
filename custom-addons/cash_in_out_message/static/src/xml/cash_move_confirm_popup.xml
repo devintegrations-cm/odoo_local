@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates id="template" xml:space="preserve">
+
+    <t t-name="cash_in_out_message.CashMoveConfirmPopup">
+        <div class="popup popup-confirm cash-move-confirm-popup">
+
+            <div class="popup-header">
+                <div t-attf-class="confirm-icon {{movementTypeClass}}">
+                    <i t-attf-class="{{iconClass}}"/>
+                </div>
+                <div class="popup-title">
+                    Confirmar movimiento de efectivo
+                </div>
+            </div>
+
+            <div class="popup-body">
+                <p class="movement-description">
+                    Está a punto de registrar un
+                    <span t-attf-class="movement-type {{movementTypeClass}}"
+                          t-esc="movementTypeLabel"/>.
+                </p>
+
+                <div t-attf-class="movement-amount {{movementTypeClass}}">
+                    <t t-esc="formattedAmount"/>
+                </div>
+
+                <div class="confirm-question">¿Desea continuar?</div>
+
+                <div t-if="isLastMovement"
+                     class="last-movement-warning">
+                    <i class="fa fa-exclamation-triangle warning-icon"/>
+                    <div class="warning-text">
+                        <strong>Último movimiento permitido</strong>
+                        Este será el último movimiento de efectivo que podrá
+                        registrar en esta sesión. No podrá realizar más movimientos
+                        Cash In/Out después de este.
+                    </div>
+                </div>
+
+                <div t-if="configMessage"
+                     class="config-message">
+                    <i class="fa fa-info-circle message-icon"/>
+                    <div class="message-text" t-esc="configMessage"/>
+                </div>
+            </div>
+
+            <div class="footer">
+                <div class="button confirm-btn" t-on-click="confirm">
+                    Sí, registrar
+                </div>
+                <div class="button cancel-btn" t-on-click="cancel">
+                    Cancelar
+                </div>
+            </div>
+
+        </div>
+    </t>
+
+</templates>

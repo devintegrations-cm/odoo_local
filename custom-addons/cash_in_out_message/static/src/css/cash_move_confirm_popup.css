@@ -1,0 +1,262 @@
+/* Cash Move Confirmation Popup Styles */
+
+.cash-move-confirm-popup {
+    max-width: 480px;
+    margin: auto;
+}
+
+.cash-move-confirm-popup .popup-header {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    padding: 20px 24px 12px;
+}
+
+.cash-move-confirm-popup .confirm-icon {
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 28px;
+    color: white;
+    flex-shrink: 0;
+}
+
+.cash-move-confirm-popup .confirm-icon.cash-in {
+    background: linear-gradient(135deg, #28a745, #20c997);
+    box-shadow: 0 4px 12px rgba(40, 167, 69, 0.35);
+}
+
+.cash-move-confirm-popup .confirm-icon.cash-out {
+    background: linear-gradient(135deg, #dc3545, #e83e8c);
+    box-shadow: 0 4px 12px rgba(220, 53, 69, 0.35);
+}
+
+.cash-move-confirm-popup .popup-title {
+    font-size: 18px;
+    font-weight: 600;
+    color: #212529;
+    text-align: center;
+    margin: 0;
+}
+
+.cash-move-confirm-popup .popup-body {
+    padding: 8px 24px 16px;
+    text-align: center;
+}
+
+.cash-move-confirm-popup .movement-description {
+    font-size: 15px;
+    color: #495057;
+    line-height: 1.6;
+    margin-bottom: 8px;
+}
+
+.cash-move-confirm-popup .movement-type {
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.cash-move-confirm-popup .movement-type.cash-in {
+    color: #28a745;
+}
+
+.cash-move-confirm-popup .movement-type.cash-out {
+    color: #dc3545;
+}
+
+.cash-move-confirm-popup .movement-amount {
+    font-size: 28px;
+    font-weight: 700;
+    margin: 16px 0;
+    padding: 12px;
+    background: #f8f9fa;
+    border-radius: 8px;
+    border-left: 4px solid;
+}
+
+.cash-move-confirm-popup .movement-amount.cash-in {
+    color: #28a745;
+    border-left-color: #28a745;
+}
+
+.cash-move-confirm-popup .movement-amount.cash-out {
+    color: #dc3545;
+    border-left-color: #dc3545;
+}
+
+.cash-move-confirm-popup .confirm-question {
+    font-size: 16px;
+    font-weight: 500;
+    color: #212529;
+    margin: 16px 0;
+}
+
+.cash-move-confirm-popup .last-movement-warning {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 12px 16px;
+    margin: 16px 0;
+    background: #fff3cd;
+    border: 1px solid #ffc107;
+    border-radius: 8px;
+    text-align: left;
+}
+
+.cash-move-confirm-popup .last-movement-warning .warning-icon {
+    color: #856404;
+    font-size: 20px;
+    flex-shrink: 0;
+    margin-top: 2px;
+}
+
+.cash-move-confirm-popup .last-movement-warning .warning-text {
+    font-size: 14px;
+    color: #856404;
+    line-height: 1.5;
+}
+
+.cash-move-confirm-popup .last-movement-warning .warning-text strong {
+    display: block;
+    margin-bottom: 4px;
+}
+
+.cash-move-confirm-popup .config-message {
+    padding: 12px 16px;
+    margin: 16px 0;
+    background: #e7f1ff;
+    border: 1px solid #b3d7ff;
+    border-radius: 8px;
+    text-align: left;
+}
+
+.cash-move-confirm-popup .config-message .message-icon {
+    color: #004085;
+    font-size: 20px;
+    flex-shrink: 0;
+    margin-top: 2px;
+}
+
+.cash-move-confirm-popup .config-message .message-text {
+    font-size: 14px;
+    color: #004085;
+    line-height: 1.5;
+}
+
+.cash-move-confirm-popup .footer {
+    display: flex;
+    gap: 12px;
+    padding: 16px 24px 24px;
+    justify-content: center;
+}
+
+.cash-move-confirm-popup .footer .button {
+    flex: 1;
+    max-width: 180px;
+    padding: 14px 24px;
+    font-size: 16px;
+    font-weight: 600;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-align: center;
+    min-height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.cash-move-confirm-popup .footer .button.confirm-btn {
+    background: linear-gradient(135deg, #28a745, #20c997);
+    color: white;
+    border: none;
+    box-shadow: 0 2px 8px rgba(40, 167, 69, 0.3);
+}
+
+.cash-move-confirm-popup .footer .button.confirm-btn:hover {
+    background: linear-gradient(135deg, #218838, #1ba87c);
+    box-shadow: 0 4px 12px rgba(40, 167, 69, 0.4);
+    transform: translateY(-1px);
+}
+
+.cash-move-confirm-popup .footer .button.confirm-btn:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 6px rgba(40, 167, 69, 0.3);
+}
+
+.cash-move-confirm-popup .footer .button.cancel-btn {
+    background: #f8f9fa;
+    color: #6c757d;
+    border: 2px solid #dee2e6;
+}
+
+.cash-move-confirm-popup .footer .button.cancel-btn:hover {
+    background: #e9ecef;
+    border-color: #ced4da;
+    color: #495057;
+}
+
+.cash-move-confirm-popup .footer .button.cancel-btn:active {
+    background: #dee2e6;
+}
+
+/* Touch-friendly improvements */
+@media (pointer: coarse) {
+    .cash-move-confirm-popup .footer .button {
+        min-height: 56px;
+        padding: 16px 28px;
+        font-size: 17px;
+    }
+
+    .cash-move-confirm-popup .movement-amount {
+        font-size: 32px;
+        padding: 16px;
+    }
+}
+
+/* Responsive adjustments */
+@media (max-width: 480px) {
+    .cash-move-confirm-popup {
+        max-width: 100%;
+        margin: 8px;
+    }
+
+    .cash-move-confirm-popup .popup-header {
+        padding: 16px 16px 8px;
+    }
+
+    .cash-move-confirm-popup .popup-body {
+        padding: 8px 16px;
+    }
+
+    .cash-move-confirm-popup .footer {
+        padding: 12px 16px 20px;
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .cash-move-confirm-popup .footer .button {
+        max-width: 100%;
+    }
+}
+
+/* Animation */
+@keyframes fadeInScale {
+    from {
+        opacity: 0;
+        transform: scale(0.95);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+.cash-move-confirm-popup {
+    animation: fadeInScale 0.2s ease-out;
+}

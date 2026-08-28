@@ -46,17 +46,18 @@ patch(CashMovePopup.prototype, {
         });
     },
 
-    async confirm() {
+    _isLastMovement() {
         const count = this.cashMoveControl.count;
         const limit = this.cashMoveControl.limit;
+        return count + 1 === limit;
+    },
 
+    async confirm() {
         if (this.state.isLimitReached) {
             return;
         }
 
-        const isLastMovement = count + 1 === limit;
-
-        if (isLastMovement) {
+        if (this._isLastMovement() && !this._skipCashMoveWarning) {
             const { confirmed } = await this.popup.add(
                 CashMoveWarningPopup,
                 {
@@ -66,8 +67,8 @@ patch(CashMovePopup.prototype, {
                         + "Movimientos: %(current)s/%(limit)s\n\n"
                         + "¿Desea continuar?",
                         {
-                            current: count + 1,
-                            limit: limit,
+                            current: this.cashMoveControl.count + 1,
+                            limit: this.cashMoveControl.limit,
                         }
                     ),
                     confirmLabel: _t("Confirmar"),
@@ -75,11 +76,9 @@ patch(CashMovePopup.prototype, {
                 }
             );
 
-            if (confirmed) {
-                await super.confirm();
+            if (!confirmed) {
+                return;
             }
-
-            return;
         }
 
         return super.confirm();

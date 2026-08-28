@@ -2,14 +2,10 @@
 <templates id="template" xml:space="preserve">
 
     <t t-inherit="point_of_sale.CashMovePopup" t-inherit-mode="extension">
-        <xpath expr="//div[contains(@class, 'form-floating')]" position="before">
-            <div t-if="cashInOutMessage"
-                 class="alert alert-warning mt-2 mb-2"
-                 role="alert">
-                <strong>Importante: </strong>
-                <span t-esc="cashInOutMessage"/>
-            </div>
-        </xpath>
+        <!--
+            The configurable message is now shown in the confirmation popup
+            (CashMoveConfirmPopup) instead of the main popup banner.
+        -->
     </t>
 
 </templates>
