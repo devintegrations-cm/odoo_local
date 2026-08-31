@@ -1,6 +1,6 @@
 {
     'name': 'Pos Inventory Queue',
-    'version': '17.0.1.0.0',
+    'version': '17.0.1.1.0',
     'category': 'Point of Sale',
     'summary': 'Serializes POS real-time inventory operations to prevent concurrency',
     'description': """

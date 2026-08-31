@@ -10,4 +10,14 @@
         <field name="numbercall">-1</field>
         <field name="active">True</field>
     </record>
+    <record id="ir_cron_process_pending_pos_inventory_queue" model="ir.cron">
+        <field name="name">POS Inventory Queue: Process pending items</field>
+        <field name="model_id" ref="model_pos_inventory_queue" />
+        <field name="state">code</field>
+        <field name="code">model._process_queue()</field>
+        <field name="interval_number">1</field>
+        <field name="interval_type">minutes</field>
+        <field name="numbercall">-1</field>
+        <field name="active">True</field>
+    </record>
 </odoo>

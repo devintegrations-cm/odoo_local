@@ -632,14 +632,6 @@ def main():
         default=5,
     )
 
-    parser.add_argument(
-        "--timeout",
-        type=int,
-        default=120,
-        help="Segundos máximos por worker antes de terminar el proceso "
-             "forzosamente (evita que la prueba quede colgada).",
-    )
-
     args = parser.parse_args()
 
     if args.workers < 2:
@@ -731,28 +723,7 @@ def main():
 
     for process in processes:
 
-        process.join(args.timeout)
-
-        if process.is_alive():
-            # Un worker no terminó a tiempo (p. ej. quedó
-            # bloqueado esperando un lock). Terminarlo forzosamente
-            # para que la validación final siempre se ejecute en
-            # lugar de dejar la prueba colgada.
-            print(
-                f"[{process.pid}] Worker no terminó en "
-                f"{args.timeout}s, terminando...",
-                flush=True,
-            )
-            process.terminate()
-            process.join(5)
-
-    # Cerrar las pipes de los procesos para evitar que un join posterior
-    # quede bloqueado al leer la salida de un proceso terminado.
-    for process in processes:
-        try:
-            process.close()
-        except Exception:
-            pass
+        process.join()
 
     # -------------------------------------------------------------
     # PASO 3

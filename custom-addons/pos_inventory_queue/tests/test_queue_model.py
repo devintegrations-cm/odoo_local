@@ -92,8 +92,16 @@ class TestPosInventoryQueue(TransactionCase):
             'error_message': 'Test error',
         })
 
+        # La cola solo procesa items committeados.
+        self.env.cr.commit()
+
         item.action_retry()
 
+        self.env.invalidate_all()
+
+        item = self.Queue.search(
+            [('picking_id', '=', picking.id)]
+        )
         self.assertEqual(item.state, 'done')
         self.assertEqual(item.retry_count, 0)
         self.assertFalse(item.error_message)
@@ -116,6 +124,8 @@ class TestPosInventoryQueue(TransactionCase):
         item_id = self.Queue._claim_next_item()
         self.assertIsNotNone(item_id)
 
+        self.env.invalidate_all()
+
         item = self.Queue.browse(item_id)
         self.assertEqual(item.state, 'processing')
 
@@ -127,7 +137,12 @@ class TestPosInventoryQueue(TransactionCase):
         picking = self._create_picking('PROC-1')
         self.Queue.create({'picking_id': picking.id})
 
+        # La cola solo procesa items committeados.
+        self.env.cr.commit()
+
         self.Queue._process_queue()
+
+        self.env.invalidate_all()
 
         item = self.Queue.search(
             [('picking_id', '=', picking.id)]
@@ -143,7 +158,12 @@ class TestPosInventoryQueue(TransactionCase):
         self.Queue.create({'picking_id': p2.id})
         self.Queue.create({'picking_id': p3.id})
 
+        # La cola solo procesa items committeados.
+        self.env.cr.commit()
+
         self.Queue._process_queue()
+
+        self.env.invalidate_all()
 
         items = self.Queue.search([
             ('picking_id', 'in', [p1.id, p2.id, p3.id]),
