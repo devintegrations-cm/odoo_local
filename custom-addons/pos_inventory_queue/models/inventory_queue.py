@@ -216,7 +216,11 @@ class PosInventoryQueue(models.Model):
                         SELECT id
                           FROM pos_inventory_queue
                          WHERE (
-                                state IN ('pending', 'failed')
+                                state = 'pending'
+                                OR (
+                                    state = 'failed'
+                                    AND retry_count < %s
+                                )
                                 OR (
                                     state = 'processing'
                                     AND start_date < (
@@ -225,7 +229,6 @@ class PosInventoryQueue(models.Model):
                                     )
                                 )
                               )
-                           AND retry_count < %s
                          ORDER BY
                             CASE
                                 WHEN state = 'pending' THEN 0
@@ -236,8 +239,8 @@ class PosInventoryQueue(models.Model):
                          LIMIT 1
                     """,
                     (
-                        "%d minutes" % self.STALE_PROCESSING_MINUTES,
                         self.MAX_RETRIES,
+                        "%d minutes" % self.STALE_PROCESSING_MINUTES,
                     ),
                 )
 

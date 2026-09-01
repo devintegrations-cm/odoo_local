@@ -178,6 +178,46 @@ def _fresh_env(db_name):
     return api.Environment(cr, SUPERUSER_ID, {}), cr
 
 
+def _patch_ei_operation(env):
+    """
+    Monkey-patch pos.order._create_invoice to inject ei_operation
+    into move_vals for Colombian e-invoicing (l10n_co_edi).
+
+    Odoo's .with_context() in _create_invoice REPLACES the context,
+    so default_ei_operation via context gets wiped. Direct injection
+    into move_vals is the only reliable approach.
+    """
+    Move = env['account.move']
+    if 'ei_operation' not in Move._fields:
+        return
+
+    field = Move._fields['ei_operation']
+    default_val = field.default
+    if callable(default_val):
+        try:
+            default_val = default_val(Move)
+        except Exception:
+            default_val = None
+
+    if not default_val:
+        env.cr.execute(
+            "SELECT ei_operation FROM account_move "
+            "WHERE ei_operation IS NOT NULL LIMIT 1"
+        )
+        row = env.cr.fetchone()
+        default_val = row[0] if row else 'fac'
+
+    from odoo.addons.point_of_sale.models.pos_order import PosOrder
+    original = PosOrder._create_invoice
+
+    def _patched(self, move_vals):
+        if 'ei_operation' not in move_vals:
+            move_vals['ei_operation'] = default_val
+        return original(self, move_vals)
+
+    PosOrder._create_invoice = _patched
+
+
 def _resolve_payment_method(env, session, payment_method_id):
     """
     Resuelve el método de pago para la sesión asignada al worker.
@@ -509,6 +549,8 @@ def prepare_test_data(env, args):
             "Limpia la cola antes de ejecutar esta prueba. "
             f"Encontrados: {pending.ids}"
         )
+
+    _patch_ei_operation(env)
 
     env.cr.commit()
 

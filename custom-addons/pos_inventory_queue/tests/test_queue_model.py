@@ -171,3 +171,50 @@ class TestPosInventoryQueue(TransactionCase):
 
         for item in items:
             self.assertEqual(item.state, 'done')
+
+    def test_claim_pending_with_max_retries(self):
+        """Regression: pending items with retry_count >= MAX_RETRIES
+        must still be claimed by the cron.  Previously the query
+        ``retry_count < MAX_RETRIES`` excluded them, leaving them
+        stuck forever."""
+        picking = self._create_picking('MAXRETRY-1')
+        item = self.Queue.create({'picking_id': picking.id})
+
+        item.sudo().write({
+            'state': 'pending',
+            'retry_count': self.Queue.MAX_RETRIES,
+        })
+
+        self.env.cr.commit()
+
+        item_id = self.Queue._claim_next_item()
+        self.assertIsNotNone(
+            item_id,
+            'pending item with retry_count=MAX_RETRIES '
+            'should be claimable',
+        )
+
+        self.env.invalidate_all()
+
+        item = self.Queue.browse(item_id)
+        self.assertEqual(item.state, 'processing')
+
+    def test_claim_failed_with_max_retries_excluded(self):
+        """failed items with retry_count >= MAX_RETRIES must NOT be
+        claimed — they represent logic errors, not contention."""
+        picking = self._create_picking('MAXRETRY-2')
+        item = self.Queue.create({'picking_id': picking.id})
+
+        item.sudo().write({
+            'state': 'failed',
+            'retry_count': self.Queue.MAX_RETRIES,
+        })
+
+        self.env.cr.commit()
+
+        item_id = self.Queue._claim_next_item()
+        self.assertIsNone(
+            item_id,
+            'failed item with retry_count=MAX_RETRIES '
+            'should NOT be claimable',
+        )
