@@ -3,21 +3,22 @@
 <templates id="template" xml:space="preserve">
 
     <t t-name="pos_closing_validation.RescueSessionWarningPopup">
-        <div class="popup popup-confirm">
-            <div class="popup-header">
-                Sesión de Rescate
+        <div class="popup popup-confirm rescue-popup">
+            <div class="modal-header">
+                <h4 class="modal-title">
+                    <t t-esc="props.title"/>
+                </h4>
             </div>
-            <div class="body">
+            <main class="modal-body">
                 <p>
-                    Esta sesión es de rescate. Debe actualizar la página antes
-                    de continuar con esta operación.
+                    <t t-esc="props.body"/>
                 </p>
-            </div>
-            <div class="footer">
-                <div class="button highlight" t-on-click="onReload">
+            </main>
+            <footer class="footer modal-footer">
+                <div class="button highlight btn btn-lg btn-primary" t-on-click="onReload">
                     Actualizar Página
                 </div>
-            </div>
+            </footer>
         </div>
     </t>
 

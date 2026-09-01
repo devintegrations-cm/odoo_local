@@ -24,7 +24,7 @@ class PosConfig(models.Model):
 
     enable_rescue_session_validation = fields.Boolean(
         string="Validar sesiones de rescate",
-        default=True,
+        default=False,
         help="Mostrar advertencias cuando existan sesiones de rescate pendientes "
              "al cerrar la sesión normal.",
     )

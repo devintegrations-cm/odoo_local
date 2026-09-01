@@ -1,3 +1,35 @@
 .popup-error .modal-body {
     white-space: pre-line;
 }
+
+/* Rescue popup */
+.rescue-popup .modal-header {
+    background-color: #fff3cd;
+    border-bottom: 2px solid #ffc107;
+    padding: 12px 16px;
+}
+
+.rescue-popup .modal-title {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #856404;
+}
+
+.rescue-popup .modal-body {
+    padding: 20px 16px;
+    font-size: 0.95rem;
+    line-height: 1.5;
+    color: #333;
+}
+
+.rescue-popup .footer.modal-footer {
+    padding: 12px 16px;
+}
+
+.rescue-popup .footer .button.highlight {
+    background-color: #0d6efd;
+    color: #fff;
+    padding: 10px 24px;
+    border-radius: 4px;
+    font-weight: 500;
+}

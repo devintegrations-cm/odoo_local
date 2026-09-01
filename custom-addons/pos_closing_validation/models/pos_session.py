@@ -85,6 +85,8 @@ class PosSession(models.Model):
         else:
             reason = ""
 
+        has_orders = bool(self.order_ids)
+
         return {
             "session_id": self.id,
             "session_name": self.name,
@@ -107,6 +109,7 @@ class PosSession(models.Model):
             "difference": counted - expected,
             "statement_lines_count": len(self.statement_line_ids),
             "orders_count": len(self.order_ids),
+            "has_orders": has_orders,
         }
 
     # ------------------------------------------------------------------
@@ -227,11 +230,35 @@ class PosSession(models.Model):
 
         return result
 
+    def _is_empty_rescue(self):
+        """Return True if this rescue session has no meaningful data.
+
+        A rescue session is considered empty when it has:
+        - No POS orders (any state: draft, paid, done, invoice, cancel)
+        - No payments
+        - No bank statement lines
+        """
+        self.ensure_one()
+        if not self.rescue:
+            return False
+
+        has_orders = self.env["pos.order"].search_count(
+            [("session_id", "=", self.id)], limit=1
+        )
+        has_payments = self.env["pos.payment"].search_count(
+            [("session_id", "=", self.id)], limit=1
+        )
+        has_statement_lines = self.env["account.bank.statement.line"].search_count(
+            [("pos_session_id", "=", self.id)], limit=1
+        )
+        return not (has_orders or has_payments or has_statement_lines)
+
     def _check_rescue_sessions_pending(self):
         """Return error dict if there are open rescue sessions for this config.
 
         Blocks the session close and advises the user to review rescue
-        sessions before proceeding.
+        sessions before proceeding.  Empty rescue sessions (no orders,
+        no payments, no statement lines) are ignored.
         """
         self.ensure_one()
 
@@ -242,7 +269,8 @@ class PosSession(models.Model):
             ("config_id", "=", self.config_id.id),
             ("rescue", "=", True),
             ("state", "!=", "closed"),
-        ])
+        ]).filtered(lambda s: not s._is_empty_rescue())
+
         if rescue_sessions:
             return {
                 "successful": False,

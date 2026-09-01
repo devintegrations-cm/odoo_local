@@ -28,17 +28,31 @@ patch(Navbar.prototype, {
             this.pos.pos_session.id
         );
 
-        if (info.must_block) {
+        // Rescue session with no orders: block everything
+        if (info.is_rescue && !info.has_orders) {
             await this.popup.add(RescueSessionWarningPopup, {
-                title: _t("Sesión no disponible"),
+                title: _t("Sesión de rescate vacía"),
                 body: _t(
-                    "Esta sesión ya no está disponible para realizar " +
-                    "operaciones de efectivo. Actualice la página para continuar."
+                    "Esta sesión de rescate no tiene órdenes registradas. " +
+                    "Actualice la página para iniciar una nueva sesión."
                 ),
             });
             return;
         }
 
+        // Non-rescue session in closing/closed state: block
+        if (!info.is_rescue && info.must_block) {
+            await this.popup.add(RescueSessionWarningPopup, {
+                title: _t("Sesión no disponible"),
+                body: _t(
+                    "Esta sesión ya no está disponible para operaciones de efectivo. " +
+                    "Actualice la página para continuar."
+                ),
+            });
+            return;
+        }
+
+        // Rescue session WITH orders: allow cash in/out
         this.hardwareProxy.openCashbox(_t("Cash in / out"));
         this.popup.add(CashMovePopup);
     },
@@ -49,6 +63,19 @@ patch(Navbar.prototype, {
             this.pos.pos_session.id
         );
 
+        // Any rescue session: always block close
+        if (info.is_rescue) {
+            await this.popup.add(RescueSessionWarningPopup, {
+                title: _t("Actualice la página"),
+                body: _t(
+                    "Esta sesión es de rescate y tiene órdenes pendientes. " +
+                    "Actualice la página para sincronizar los datos correctamente."
+                ),
+            });
+            return;
+        }
+
+        // Non-rescue session in closing/closed state: block
         if (info.must_block) {
             await this.popup.add(RescueSessionWarningPopup, {
                 title: _t("Sesión no disponible"),
