@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<templates id="template" xml:space="preserve">
+
+    <!--
+        Extends Odoo 17's standard ClosePosPopup to add a summary row
+        showing the expected cash amount computed by our snapshot.
+
+        This complements the existing cash-overview tbody which already
+        shows Opening + individual cash moves + Payments.  Our addition
+        makes the total explicit so the operator can visually trace:
+
+            Opening  + Cash In - Cash Out + Payments  =  Expected
+
+        The `expected_cash` prop is injected by our backend override
+        of ``get_closing_control_data`` and accepted by OWL through
+        the static props extension in closing_popup_patch.js.
+    -->
+    <t t-name="pos_closing_validation.ClosePosPopupExtension"
+       t-inherit="point_of_sale.ClosePosPopup"
+       t-inherit-mode="extension">
+        <xpath expr="//tbody[hasclass('cash-overview')]" position="inside">
+            <tr t-if="props.expected_cash !== undefined" class="border-top fw-bold">
+                <td>Efectivo esperado:</td>
+                <td class="align-top" t-esc="env.utils.formatCurrency(props.expected_cash)"/>
+            </tr>
+        </xpath>
+    </t>
+
+</templates>

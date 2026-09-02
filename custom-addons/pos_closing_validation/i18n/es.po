@@ -1,0 +1,617 @@
+# Translation of Odoo Server.
+# This file contains the translation of the following modules:
+# 	* pos_closing_validation
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: Odoo Server 17.0-20260817\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-09-02 17:59+0000\n"
+"PO-Revision-Date: 2026-09-02 17:59+0000\n"
+"Last-Translator: \n"
+"Language-Team: \n"
+"MIME-Version: 1.0\n"
+"Language: es_CO\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+#. module: pos_closing_validation
+#. odoo-python
+#: code:addons/pos_closing_validation/models/pos_session.py:0
+#, python-format
+msgid ""
+"%(body)s\n"
+"\n"
+"Diferencia: %(difference)s\n"
+"Máximo autorizado: %(maximum)s"
+msgstr ""
+"%(body)s\n"
+"\n"
+"Diferencia: %(difference)s\n"
+"Máximo autorizado: %(maximum)s"
+
+#. module: pos_closing_validation
+#. odoo-javascript
+#: code:addons/pos_closing_validation/static/src/js/navbar_patch.js:0
+#, python-format
+msgid "Actualice la página"
+msgstr "Actualice la página"
+
+#. module: pos_closing_validation
+#. odoo-javascript
+#: code:addons/pos_closing_validation/static/src/js/rescue_session_warning_popup.js:0
+#, python-format
+msgid "Actualice la página para continuar con esta operación."
+msgstr "Actualice la página para continuar con esta operación."
+
+#. module: pos_closing_validation
+#. odoo-javascript
+#: code:addons/pos_closing_validation/static/src/xml/rescue_session_warning_popup.xml:0
+#, python-format
+msgid "Actualizar Página"
+msgstr "Actualizar Página"
+
+#. module: pos_closing_validation
+#. odoo-javascript
+#: code:addons/pos_closing_validation/static/src/xml/cash_move_popup.xml:0
+#, python-format
+msgid "Apertura:"
+msgstr "Apertura:"
+
+#. module: pos_closing_validation
+#: model:ir.model,name:pos_closing_validation.model_account_bank_statement_line
+msgid "Bank Statement Line"
+msgstr "Línea de estado de cuenta bancario"
+
+#. module: pos_closing_validation
+#. odoo-javascript
+#: code:addons/pos_closing_validation/static/src/js/cash_move_popup.js:0
+#, python-format
+msgid "Cancelar"
+msgstr "Cancelar"
+
+#. module: pos_closing_validation
+#. odoo-javascript
+#: code:addons/pos_closing_validation/static/src/xml/cash_move_popup.xml:0
+#, python-format
+msgid "Cash In:"
+msgstr "Cash In:"
+
+#. module: pos_closing_validation
+#. odoo-javascript
+#: code:addons/pos_closing_validation/static/src/xml/cash_move_popup.xml:0
+#, python-format
+msgid "Cash Out:"
+msgstr "Cash Out:"
+
+#. module: pos_closing_validation
+#. odoo-javascript
+#: code:addons/pos_closing_validation/static/src/js/navbar_patch.js:0
+#, python-format
+msgid "Cash in / out"
+msgstr "Cash in / out"
+
+#. module: pos_closing_validation
+#. odoo-javascript
+#: code:addons/pos_closing_validation/static/src/xml/cash_move_popup.xml:0
+#, python-format
+msgid ""
+"Cierre esta ventana y vuelva a intentarlo. Si el problema\n"
+"                persiste, contacte a un administrador del Punto de Venta."
+msgstr ""
+"Cierre esta ventana y vuelva a intentarlo. Si el problema\n"
+"                persiste, contacte a un administrador del Punto de Venta."
+
+#. module: pos_closing_validation
+#: model:ir.model,name:pos_closing_validation.model_res_config_settings
+msgid "Config Settings"
+msgstr "Ajustes de configuración"
+
+#. module: pos_closing_validation
+#. odoo-javascript
+#: code:addons/pos_closing_validation/static/src/js/cash_move_popup.js:0
+#, python-format
+msgid "Confirmar"
+msgstr "Confirmar"
+
+#. module: pos_closing_validation
+#. odoo-javascript
+#: code:addons/pos_closing_validation/static/src/xml/cash_move_popup.xml:0
+#: code:addons/pos_closing_validation/static/src/xml/closing_popup_extension.xml:0
+#, python-format
+msgid "Efectivo esperado:"
+msgstr "Efectivo esperado:"
+
+#. module: pos_closing_validation
+#. odoo-python
+#: code:addons/pos_closing_validation/models/pos_session.py:0
+#, python-format
+msgid ""
+"El Punto de Venta no está sincronizado con la sesión actual.\n"
+"\n"
+"Actualice la página del Punto de Venta y vuelva a intentarlo.\n"
+"\n"
+"Si el problema persiste, contacte a un administrador."
+msgstr ""
+"El Punto de Venta no está sincronizado con la sesión actual.\n"
+"\n"
+"Actualice la página del Punto de Venta y vuelva a intentarlo.\n"
+"\n"
+"Si el problema persiste, contacte a un administrador."
+
+#. module: pos_closing_validation
+#. odoo-javascript
+#: code:addons/pos_closing_validation/static/src/js/navbar_patch.js:0
+#, python-format
+msgid ""
+"El Punto de Venta no está sincronizado con la sesión actual. Actualice la "
+"página y vuelva a intentarlo."
+msgstr ""
+"El Punto de Venta no está sincronizado con la sesión actual. Actualice la "
+"página y vuelva a intentarlo."
+
+#. module: pos_closing_validation
+#. odoo-javascript
+#: code:addons/pos_closing_validation/static/src/js/navbar_patch.js:0
+#, python-format
+msgid ""
+"El Punto de Venta tiene control de efectivo activado pero no tiene un método"
+" de pago de efectivo configurado. Contacte a un administrador."
+msgstr ""
+"El Punto de Venta tiene control de efectivo activado pero no tiene un método"
+" de pago de efectivo configurado. Contacte a un administrador."
+
+#. module: pos_closing_validation
+#. odoo-javascript
+#: code:addons/pos_closing_validation/static/src/js/navbar_patch.js:0
+#: code:addons/pos_closing_validation/static/src/js/navbar_patch.js:0
+#, python-format
+msgid "Error"
+msgstr "Error"
+
+#. module: pos_closing_validation
+#. odoo-javascript
+#: code:addons/pos_closing_validation/static/src/js/navbar_patch.js:0
+#: code:addons/pos_closing_validation/static/src/js/navbar_patch.js:0
+#, python-format
+msgid "Error de conexión"
+msgstr "Error de conexión"
+
+#. module: pos_closing_validation
+#. odoo-javascript
+#: code:addons/pos_closing_validation/static/src/js/navbar_patch.js:0
+#, python-format
+msgid "Error de configuración"
+msgstr "Error de configuración"
+
+#. module: pos_closing_validation
+#. odoo-javascript
+#: code:addons/pos_closing_validation/static/src/js/navbar_patch.js:0
+#, python-format
+msgid ""
+"Esta sesión es de rescate y tiene órdenes pendientes. Actualice la página "
+"para sincronizar los datos correctamente."
+msgstr ""
+"Esta sesión es de rescate y tiene órdenes pendientes. Actualice la página "
+"para sincronizar los datos correctamente."
+
+#. module: pos_closing_validation
+#. odoo-javascript
+#: code:addons/pos_closing_validation/static/src/js/navbar_patch.js:0
+#, python-format
+msgid ""
+"Esta sesión no está disponible para operaciones de efectivo. Actualice la "
+"página para continuar."
+msgstr ""
+"Esta sesión no está disponible para operaciones de efectivo. Actualice la "
+"página para continuar."
+
+#. module: pos_closing_validation
+#. odoo-javascript
+#: code:addons/pos_closing_validation/static/src/js/navbar_patch.js:0
+#, python-format
+msgid "Esta sesión no puede cerrarse en este momento."
+msgstr "Esta sesión no puede cerrarse en este momento."
+
+#. module: pos_closing_validation
+#. odoo-javascript
+#: code:addons/pos_closing_validation/static/src/js/cash_move_popup.js:0
+#, python-format
+msgid ""
+"Este será el último movimiento Cash In/Out permitido para esta sesión.\n"
+"\n"
+"Movimientos: %(current)s/%(limit)s\n"
+"\n"
+"¿Desea continuar?"
+msgstr ""
+"Este será el último movimiento Cash In/Out permitido para esta sesión.\n"
+"\n"
+"Movimientos: %(current)s/%(limit)s\n"
+"\n"
+"¿Desea continuar?"
+
+#. module: pos_closing_validation
+#. odoo-python
+#: code:addons/pos_closing_validation/models/pos_session.py:0
+#, python-format
+msgid ""
+"Existe una inconsistencia en los movimientos de efectivo.\n"
+"\n"
+"Se registraron %(current)s movimientos, pero el límite configurado es de %(maximum)s.\n"
+"\n"
+"No puede cerrar la sesión hasta que se resuelva esta situación. Contacte a un responsable del Punto de Venta."
+msgstr ""
+"Existe una inconsistencia en los movimientos de efectivo.\n"
+"\n"
+"Se registraron %(current)s movimientos, pero el límite configurado es de %(maximum)s.\n"
+"\n"
+"No puede cerrar la sesión hasta que se resuelva esta situación. Contacte a un responsable del Punto de Venta."
+
+#. module: pos_closing_validation
+#. odoo-python
+#: code:addons/pos_closing_validation/models/pos_session.py:0
+#, python-format
+msgid ""
+"Existe(n) %(count)s sesión(es) de rescate pendiente(s) para este Punto de Venta.\n"
+"\n"
+"Se recomienda revisarlas antes de cerrar para asegurar que todos los movimientos estén contabilizados.\n"
+"\n"
+"Sesiones: %(names)s"
+msgstr ""
+"Existe(n) %(count)s sesión(es) de rescate pendiente(s) para este Punto de Venta.\n"
+"\n"
+"Se recomienda revisarlas antes de cerrar para asegurar que todos los movimientos estén contabilizados.\n"
+"\n"
+"Sesiones: %(names)s"
+
+#. module: pos_closing_validation
+#. odoo-python
+#: code:addons/pos_closing_validation/models/pos_session.py:0
+#, python-format
+msgid "Hay %(count)s pagos huérfanos sin orden asociada."
+msgstr "Hay %(count)s pagos huérfanos sin orden asociada."
+
+#. module: pos_closing_validation
+#. odoo-python
+#: code:addons/pos_closing_validation/models/pos_session.py:0
+#, python-format
+msgid "Hay %(count)s órdenes pagadas sin pagos registrados."
+msgstr "Hay %(count)s órdenes pagadas sin pagos registrados."
+
+#. module: pos_closing_validation
+#. odoo-python
+#: code:addons/pos_closing_validation/models/pos_session.py:0
+#, python-format
+msgid ""
+"Inconsistencia de continuidad de caja.\n"
+"\n"
+"Saldo esperado (calculado por el sistema): %(expected)s\n"
+"Saldo ingresado por el operador: %(entered)s\n"
+"Diferencia: %(diff)s\n"
+"Máximo autorizado: %(maximum)s\n"
+"\n"
+"El saldo ingresado difiere significativamente del saldo que el sistema esperaba basándose en la sesión anterior. Contacte a un responsable del Punto de Venta."
+msgstr ""
+"Inconsistencia de continuidad de caja.\n"
+"\n"
+"Saldo esperado (calculado por el sistema): %(expected)s\n"
+"Saldo ingresado por el operador: %(entered)s\n"
+"Diferencia: %(diff)s\n"
+"Máximo autorizado: %(maximum)s\n"
+"\n"
+"El saldo ingresado difiere significativamente del saldo que el sistema esperaba basándose en la sesión anterior. Contacte a un responsable del Punto de Venta."
+
+#. module: pos_closing_validation
+#: model:ir.model.fields,help:pos_closing_validation.field_account_bank_statement_line__pos_cash_move
+msgid ""
+"Indicates that this statement line was created as a POS Cash In/Out "
+"movement."
+msgstr ""
+"Indicates that this statement line was created as a POS Cash In/Out "
+"movement."
+
+#. module: pos_closing_validation
+#: model_terms:ir.ui.view,arch_db:pos_closing_validation.res_config_settings_view_form_pos_closing_validation
+msgid ""
+"Los valores de la diferencia y del máximo autorizado se añaden\n"
+"                        automáticamente al final del mensaje."
+msgstr ""
+"Los valores de la diferencia y del máximo autorizado se añaden\n"
+"                        automáticamente al final del mensaje."
+
+#. module: pos_closing_validation
+#. odoo-javascript
+#: code:addons/pos_closing_validation/static/src/xml/cash_move_popup.xml:0
+#, python-format
+msgid "Límite alcanzado:"
+msgstr "Límite alcanzado:"
+
+#. module: pos_closing_validation
+#: model:ir.model.fields,field_description:pos_closing_validation.field_pos_config__cash_difference_exceeded_message
+#: model:ir.model.fields,field_description:pos_closing_validation.field_res_config_settings__pos_cash_difference_exceeded_message
+#: model_terms:ir.ui.view,arch_db:pos_closing_validation.res_config_settings_view_form_pos_closing_validation
+msgid "Mensaje de diferencia de efectivo"
+msgstr "Mensaje de diferencia de efectivo"
+
+#. module: pos_closing_validation
+#: model:ir.model.fields,help:pos_closing_validation.field_pos_config__enable_rescue_session_validation
+msgid ""
+"Mostrar advertencias cuando existan sesiones de rescate pendientes al cerrar"
+" la sesión normal."
+msgstr ""
+"Mostrar advertencias cuando existan sesiones de rescate pendientes al cerrar"
+" la sesión normal."
+
+#. module: pos_closing_validation
+#: model:ir.model.fields,help:pos_closing_validation.field_res_config_settings__pos_enable_rescue_session_validation
+msgid "Mostrar advertencias cuando existan sesiones de rescate pendientes."
+msgstr "Mostrar advertencias cuando existan sesiones de rescate pendientes."
+
+#. module: pos_closing_validation
+#. odoo-javascript
+#: code:addons/pos_closing_validation/static/src/xml/cash_move_popup.xml:0
+#, python-format
+msgid "Movimientos:"
+msgstr "Movimientos:"
+
+#. module: pos_closing_validation
+#: model_terms:ir.ui.view,arch_db:pos_closing_validation.res_config_settings_view_form_pos_closing_validation
+msgid ""
+"Muestra advertencias cuando existan sesiones de rescate\n"
+"                        pendientes al cerrar la sesión normal."
+msgstr ""
+"Muestra advertencias cuando existan sesiones de rescate\n"
+"                        pendientes al cerrar la sesión normal."
+
+#. module: pos_closing_validation
+#: model:ir.model.fields,field_description:pos_closing_validation.field_pos_config__maximum_cash_in_out_moves
+#: model:ir.model.fields,field_description:pos_closing_validation.field_res_config_settings__pos_maximum_cash_in_out_moves
+#: model_terms:ir.ui.view,arch_db:pos_closing_validation.res_config_settings_view_form_pos_closing_validation
+msgid "Máximo de movimientos de efectivo"
+msgstr "Máximo de movimientos de efectivo"
+
+#. module: pos_closing_validation
+#. odoo-python
+#: code:addons/pos_closing_validation/models/pos_config.py:0
+#: code:addons/pos_closing_validation/models/pos_session.py:0
+#, python-format
+msgid ""
+"No puede abrir una nueva sesión porque existe(n) %(count)s sesión(es) de rescate pendiente(s) para este Punto de Venta.\n"
+"\n"
+"Sesiones pendientes: %(names)s\n"
+"\n"
+"Cierre las sesiones de rescate antes de continuar."
+msgstr ""
+"No puede abrir una nueva sesión porque existe(n) %(count)s sesión(es) de rescate pendiente(s) para este Punto de Venta.\n"
+"\n"
+"Sesiones pendientes: %(names)s\n"
+"\n"
+"Cierre las sesiones de rescate antes de continuar."
+
+#. module: pos_closing_validation
+#. odoo-python
+#: code:addons/pos_closing_validation/models/pos_session.py:0
+#, python-format
+msgid ""
+"No puede cerrar esta sesión de Punto de Venta.\n"
+"\n"
+"La diferencia de efectivo supera la diferencia máxima autorizada.\n"
+"\n"
+"Debe contactar a un responsable del Punto de Venta."
+msgstr ""
+"No puede cerrar esta sesión de Punto de Venta.\n"
+"\n"
+"La diferencia de efectivo supera la diferencia máxima autorizada.\n"
+"\n"
+"Debe contactar a un responsable del Punto de Venta."
+
+#. module: pos_closing_validation
+#. odoo-javascript
+#: code:addons/pos_closing_validation/static/src/xml/cash_move_popup.xml:0
+#, python-format
+msgid "No se pudo cargar la información."
+msgstr "No se pudo cargar la información."
+
+#. module: pos_closing_validation
+#. odoo-javascript
+#: code:addons/pos_closing_validation/static/src/js/navbar_patch.js:0
+#, python-format
+msgid "No se pudo obtener la información de cierre. Intente de nuevo."
+msgstr "No se pudo obtener la información de cierre. Intente de nuevo."
+
+#. module: pos_closing_validation
+#. odoo-javascript
+#: code:addons/pos_closing_validation/static/src/js/navbar_patch.js:0
+#, python-format
+msgid ""
+"No se pudo obtener la información de cierre. Verifique su conexión e intente"
+" de nuevo."
+msgstr ""
+"No se pudo obtener la información de cierre. Verifique su conexión e intente"
+" de nuevo."
+
+#. module: pos_closing_validation
+#. odoo-javascript
+#: code:addons/pos_closing_validation/static/src/js/navbar_patch.js:0
+#, python-format
+msgid "No se pudo obtener la información de la sesión. Intente de nuevo."
+msgstr "No se pudo obtener la información de la sesión. Intente de nuevo."
+
+#. module: pos_closing_validation
+#. odoo-javascript
+#: code:addons/pos_closing_validation/static/src/js/navbar_patch.js:0
+#, python-format
+msgid ""
+"No se pudo obtener la información de la sesión. Verifique su conexión e "
+"intente de nuevo."
+msgstr ""
+"No se pudo obtener la información de la sesión. Verifique su conexión e "
+"intente de nuevo."
+
+#. module: pos_closing_validation
+#. odoo-javascript
+#: code:addons/pos_closing_validation/static/src/js/navbar_patch.js:0
+#, python-format
+msgid "No se puede cerrar la sesión"
+msgstr "No se puede cerrar la sesión"
+
+#. module: pos_closing_validation
+#: model:ir.model.fields,help:pos_closing_validation.field_pos_config__maximum_cash_in_out_moves
+#: model:ir.model.fields,help:pos_closing_validation.field_res_config_settings__pos_maximum_cash_in_out_moves
+msgid "Número máximo de movimientos Cash In/Out permitidos por sesión."
+msgstr "Número máximo de movimientos Cash In/Out permitidos por sesión."
+
+#. module: pos_closing_validation
+#: model:ir.model.fields,field_description:pos_closing_validation.field_account_bank_statement_line__pos_cash_move
+msgid "POS Cash In/Out"
+msgstr "POS Cash In/Out"
+
+#. module: pos_closing_validation
+#: model:ir.model,name:pos_closing_validation.model_pos_config
+msgid "Point of Sale Configuration"
+msgstr "Configuración del punto de venta"
+
+#. module: pos_closing_validation
+#: model:ir.model,name:pos_closing_validation.model_pos_session
+msgid "Point of Sale Session"
+msgstr "Sesión del punto de venta"
+
+#. module: pos_closing_validation
+#. odoo-javascript
+#: code:addons/pos_closing_validation/static/src/xml/cash_move_popup.xml:0
+#, python-format
+msgid "Resumen de efectivo"
+msgstr "Resumen de efectivo"
+
+#. module: pos_closing_validation
+#: model:ir.model.fields,field_description:pos_closing_validation.field_pos_session__expected_opening_balance
+msgid "Saldo de apertura esperado"
+msgstr "Saldo de apertura esperado"
+
+#. module: pos_closing_validation
+#: model:ir.model.fields,help:pos_closing_validation.field_pos_session__expected_opening_balance
+msgid ""
+"Saldo que Odoo calculó automáticamente al abrir la sesión. Se compara con el"
+" saldo ingresado por el operador para detectar inconsistencias de "
+"continuidad de caja."
+msgstr ""
+"Saldo que Odoo calculó automáticamente al abrir la sesión. Se compara con el"
+" saldo ingresado por el operador para detectar inconsistencias de "
+"continuidad de caja."
+
+#. module: pos_closing_validation
+#. odoo-python
+#: code:addons/pos_closing_validation/models/pos_session.py:0
+#, python-format
+msgid ""
+"Se alcanzó el límite de movimientos de efectivo.\n"
+"\n"
+"Este Punto de Venta permite un máximo de %(maximum)s movimientos Cash In/Out por sesión.\n"
+"Ya se han registrado %(current)s movimientos."
+msgstr ""
+"Se alcanzó el límite de movimientos de efectivo.\n"
+"\n"
+"Este Punto de Venta permite un máximo de %(maximum)s movimientos Cash In/Out por sesión.\n"
+"Ya se han registrado %(current)s movimientos."
+
+#. module: pos_closing_validation
+#. odoo-python
+#: code:addons/pos_closing_validation/models/pos_session.py:0
+#, python-format
+msgid ""
+"Se detectaron inconsistencias en los datos de la sesión:\n"
+"\n"
+"%(issues)s\n"
+"\n"
+"Contacte a un responsable antes de cerrar."
+msgstr ""
+"Se detectaron inconsistencias en los datos de la sesión:\n"
+"\n"
+"%(issues)s\n"
+"\n"
+"Contacte a un responsable antes de cerrar."
+
+#. module: pos_closing_validation
+#. odoo-javascript
+#: code:addons/pos_closing_validation/static/src/xml/cash_move_popup.xml:0
+#, python-format
+msgid "Se han registrado los"
+msgstr "Se han registrado los"
+
+#. module: pos_closing_validation
+#: model_terms:ir.ui.view,arch_db:pos_closing_validation.res_config_settings_view_form_pos_closing_validation
+msgid "Se usará el mensaje por defecto si se deja vacío."
+msgstr "Se usará el mensaje por defecto si se deja vacío."
+
+#. module: pos_closing_validation
+#: model:ir.model.fields,field_description:pos_closing_validation.field_pos_session__rescue_session_ids
+msgid "Sesiones de Rescate"
+msgstr "Sesiones de Rescate"
+
+#. module: pos_closing_validation
+#: model:ir.model.fields,field_description:pos_closing_validation.field_pos_session__rescue_parent_session_id
+msgid "Sesión Padre"
+msgstr "Sesión Padre"
+
+#. module: pos_closing_validation
+#. odoo-javascript
+#: code:addons/pos_closing_validation/static/src/js/navbar_patch.js:0
+#: code:addons/pos_closing_validation/static/src/js/rescue_session_warning_popup.js:0
+#, python-format
+msgid "Sesión no disponible"
+msgstr "Sesión no disponible"
+
+#. module: pos_closing_validation
+#. odoo-javascript
+#: code:addons/pos_closing_validation/static/src/js/navbar_patch.js:0
+#, python-format
+msgid "Sesión no sincronizada"
+msgstr "Sesión no sincronizada"
+
+#. module: pos_closing_validation
+#: model:ir.model.fields,help:pos_closing_validation.field_pos_session__rescue_parent_session_id
+msgid "Sesión original que originó esta sesión de rescate."
+msgstr "Sesión original que originó esta sesión de rescate."
+
+#. module: pos_closing_validation
+#: model:ir.model.fields,help:pos_closing_validation.field_pos_config__cash_difference_exceeded_message
+#: model:ir.model.fields,help:pos_closing_validation.field_res_config_settings__pos_cash_difference_exceeded_message
+msgid ""
+"Texto que se muestra cuando la diferencia de efectivo supera el máximo "
+"autorizado al cerrar la sesión. Solo escriba el texto; los valores de la "
+"diferencia y del máximo autorizado se añaden automáticamente al final. "
+"Déjelo vacío para usar el mensaje por defecto."
+msgstr ""
+"Texto que se muestra cuando la diferencia de efectivo supera el máximo "
+"autorizado al cerrar la sesión. Solo escriba el texto; los valores de la "
+"diferencia y del máximo autorizado se añaden automáticamente al final. "
+"Déjelo vacío para usar el mensaje por defecto."
+
+#. module: pos_closing_validation
+#: model:ir.model.fields,field_description:pos_closing_validation.field_pos_config__enable_rescue_session_validation
+#: model:ir.model.fields,field_description:pos_closing_validation.field_res_config_settings__pos_enable_rescue_session_validation
+#: model_terms:ir.ui.view,arch_db:pos_closing_validation.res_config_settings_view_form_pos_closing_validation
+msgid "Validar sesiones de rescate"
+msgstr "Validar sesiones de rescate"
+
+#. module: pos_closing_validation
+#. odoo-javascript
+#: code:addons/pos_closing_validation/static/src/xml/cash_move_popup.xml:0
+#, python-format
+msgid "Ventas en efectivo:"
+msgstr "Ventas en efectivo:"
+
+#. module: pos_closing_validation
+#. odoo-javascript
+#: code:addons/pos_closing_validation/static/src/xml/cash_move_popup.xml:0
+#, python-format
+msgid "movimientos permitidos para esta sesión."
+msgstr "movimientos permitidos para esta sesión."
+
+#. module: pos_closing_validation
+#. odoo-javascript
+#: code:addons/pos_closing_validation/static/src/js/cash_move_popup.js:0
+#, python-format
+msgid "Último movimiento de efectivo"
+msgstr "Último movimiento de efectivo"

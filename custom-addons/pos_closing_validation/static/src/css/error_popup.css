@@ -7,12 +7,16 @@
     background-color: #fff3cd;
     border-bottom: 2px solid #ffc107;
     padding: 12px 16px;
+    justify-content: center;
+    text-align: center;
 }
 
 .rescue-popup .modal-title {
     font-size: 1.1rem;
     font-weight: 600;
     color: #856404;
+    width: 100%;
+    text-align: center;
 }
 
 .rescue-popup .modal-body {
@@ -20,10 +24,13 @@
     font-size: 0.95rem;
     line-height: 1.5;
     color: #333;
+    text-align: center;
 }
 
 .rescue-popup .footer.modal-footer {
     padding: 12px 16px;
+    justify-content: center;
+    text-align: center;
 }
 
 .rescue-popup .footer .button.highlight {
@@ -32,4 +39,5 @@
     padding: 10px 24px;
     border-radius: 4px;
     font-weight: 500;
+    margin: 0 auto;
 }

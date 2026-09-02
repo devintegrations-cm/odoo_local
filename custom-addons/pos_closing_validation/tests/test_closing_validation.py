@@ -57,11 +57,12 @@ class TestClosingValidation(TransactionCase):
 
     def _create_cash_move(self, session, amount, reason="Test"):
         """Helper to create a Cash In/Out movement."""
+        _type = "in" if amount > 0 else "out"
         session.try_cash_in_out(
-            "in" if amount > 0 else "out",
+            _type,
             abs(amount),
             reason,
-            {},
+            {"translatedType": _type},
         )
 
     def _create_order(self, session, product, price, state="draft"):
@@ -126,7 +127,7 @@ class TestClosingValidation(TransactionCase):
     # ==================================================================
 
     def test_case_b_rescue_session(self):
-        """Rescue session: opening 1556.90 + sales 303.45 - cash out 1000 = 860.35."""
+        """Rescue session: cash moves are NOT permitted, snapshot has zero moves."""
         # Create parent session first
         parent = self._create_session(opening=1556.90)
         parent.cash_register_balance_start = 1556.90
@@ -134,12 +135,9 @@ class TestClosingValidation(TransactionCase):
         # Close parent
         parent.cash_register_balance_end_real = 1556.90
         parent.action_pos_session_closing_control()
-        parent.action_pos_session_close()
 
         # Create rescue session
         rescue = self._create_session(rescue=True)
-
-        # Set opening (rescue should inherit from parent via create override)
         rescue.cash_register_balance_start = 1556.90
 
         # Create cash sales
@@ -158,56 +156,75 @@ class TestClosingValidation(TransactionCase):
                 "payment_date": fields.Datetime.now(),
             })
 
-        # Cash out of 1000
-        self._create_cash_move(rescue, -1000.0)
+        # Cash Out is NOT allowed on a rescue session
+        with self.assertRaises(UserError) as ctx:
+            self._create_cash_move(rescue, -1000.0)
+        self.assertIn("sincronizado", ctx.exception.args[0].lower())
 
-        # Get snapshot
+        # Get snapshot — no cash moves recorded
         data = rescue._get_closing_cash_validation_data()
 
         self.assertTrue(data["is_rescue"])
         self.assertAlmostEqual(data["opening_cash"], 1556.90, places=2)
         self.assertAlmostEqual(data["cash_sales"], 303.45, places=2)
-        self.assertAlmostEqual(data["cash_out"], 1000.0, places=2)
-        self.assertAlmostEqual(data["expected_cash"], 860.35, places=2)
-        self.assertEqual(data["cash_move_count"], 1)
+        self.assertAlmostEqual(data["cash_out"], 0.0, places=2)
+        self.assertAlmostEqual(data["expected_cash"], 1860.35, places=2)
+        self.assertEqual(data["cash_move_count"], 0)
 
     # ==================================================================
-    # Caso C — Rescue con Cash In
+    # Caso C — Rescue bloquea Cash In y Cash Out
     # ==================================================================
 
     def test_case_c_rescue_with_cash_in(self):
-        """Rescue with Cash In: opening + sales + cash_in - cash_out."""
+        """Rescue session blocks both Cash In and Cash Out."""
         rescue = self._create_session(rescue=True)
         rescue.cash_register_balance_start = 1556.90
 
-        product = self.env["product.product"].create({
-            "name": "Test Product",
-            "list_price": 101.15,
-            "taxes_id": [(6, 0, [])],
-        })
+        # Cash In is blocked
+        with self.assertRaises(UserError):
+            self._create_cash_move(rescue, 500.0)
 
-        # Cash sale
-        order = self._create_order(rescue, product, 101.15)
-        self.env["pos.payment"].create({
-            "pos_order_id": order.id,
-            "payment_method_id": self.cash_payment_method.id,
-            "amount": 101.15,
-            "payment_date": fields.Datetime.now(),
-        })
+        # Cash Out is blocked
+        with self.assertRaises(UserError):
+            self._create_cash_move(rescue, -200.0)
 
-        # Cash in of 500
-        self._create_cash_move(rescue, 500.0)
-
-        # Cash out of 200
-        self._create_cash_move(rescue, -200.0)
-
+        # Snapshot has zero cash moves
         data = rescue._get_closing_cash_validation_data()
+        self.assertAlmostEqual(data["cash_in"], 0.0, places=2)
+        self.assertAlmostEqual(data["cash_out"], 0.0, places=2)
+        self.assertEqual(data["cash_move_count"], 0)
 
-        expected = 1556.90 + 101.15 + 500.0 - 200.0
-        self.assertAlmostEqual(data["expected_cash"], expected, places=2)
-        self.assertAlmostEqual(data["cash_in"], 500.0, places=2)
-        self.assertAlmostEqual(data["cash_out"], 200.0, places=2)
+    def test_rescue_cannot_cash_in(self):
+        """Rescue sessions reject Cash In with a UserError."""
+        rescue = self._create_session(rescue=True)
+        rescue.cash_register_balance_start = 500.0
+
+        with self.assertRaises(UserError) as ctx:
+            self._create_cash_move(rescue, 200.0)
+        self.assertIn("sincronizado", ctx.exception.args[0].lower())
+
+    def test_rescue_cannot_cash_out(self):
+        """Rescue sessions reject Cash Out with a UserError."""
+        rescue = self._create_session(rescue=True)
+        rescue.cash_register_balance_start = 500.0
+
+        with self.assertRaises(UserError) as ctx:
+            self._create_cash_move(rescue, -100.0)
+        self.assertIn("sincronizado", ctx.exception.args[0].lower())
+
+    def test_normal_session_allows_cash_moves(self):
+        """Sanity check: non-rescue sessions can still do Cash In/Out."""
+        session = self._create_session()
+        session.cash_register_balance_start = 1000.0
+
+        # Both directions succeed
+        self._create_cash_move(session, 100.0)
+        self._create_cash_move(session, -50.0)
+
+        data = session._get_closing_cash_validation_data()
         self.assertEqual(data["cash_move_count"], 2)
+        self.assertAlmostEqual(data["cash_in"], 100.0, places=2)
+        self.assertAlmostEqual(data["cash_out"], 50.0, places=2)
 
     # ==================================================================
     # Caso D — Diferencia real dentro del límite
@@ -312,7 +329,12 @@ class TestClosingValidation(TransactionCase):
             "list_price": 100.0,
             "taxes_id": [(6, 0, [])],
         })
-        order = self._create_order(session, product, 100.0, state="paid")
+        # Odoo 17.0 core bug: passing state='paid' directly in pos.order.create()
+        # triggers _complete_values_from_session which uses self.session_id on an
+        # empty record (not the passed session), causing sequence lookup failure.
+        # Workaround: create as draft then transition to paid via write.
+        order = self._create_order(session, product, 100.0, state="draft")
+        order.write({"state": "paid"})
 
         result = session._check_session_data_integrity()
         self.assertTrue(result)
@@ -345,7 +367,6 @@ class TestClosingValidation(TransactionCase):
         parent = self._create_session()
         parent.cash_register_balance_start = 1000.0
         parent.action_pos_session_closing_control()
-        parent.action_pos_session_close()
 
         rescue = self._create_session(rescue=True)
 
@@ -511,23 +532,14 @@ class TestClosingValidation(TransactionCase):
         })
         self._create_order(rescue, product, 50.0)
 
-        # Close parent session
+        # Close parent session — now the only open session for this config
+        # is the rescue itself, and open_ui must refuse to launch.
         parent.cash_register_balance_end_real = 1050.0
         parent.action_pos_session_closing_control()
-        parent.action_pos_session_close()
 
-        # Attempting to open a new session should raise UserError
-        new_config = self.env["pos.config"].create({
-            "name": "Test POS Open Block",
-            "module_pos_restaurant": False,
-            "journal_id": self.cash_journal.id,
-            "payment_method_ids": [(6, 0, [self.cash_payment_method.id])],
-            "cash_control": True,
-            "enable_rescue_session_validation": True,
-        })
-
+        # open_ui on self.pos_config should raise because a rescue is pending
         with self.assertRaises(UserError) as ctx:
-            new_config.open_ui()
+            self.pos_config.open_ui()
         self.assertIn("rescate", ctx.exception.args[0].lower())
 
     def test_opening_allowed_when_no_rescue(self):
@@ -575,7 +587,6 @@ class TestClosingValidation(TransactionCase):
         rescue.cash_register_balance_start = 1000.0
         rescue.cash_register_balance_end_real = 1000.0
         rescue.action_pos_session_closing_control()
-        rescue.action_pos_session_close()
 
         # No pending rescues
         pending = self.env["pos.session"]._get_pending_rescue_sessions_for_config(
@@ -672,7 +683,6 @@ class TestClosingValidation(TransactionCase):
         session1.cash_register_balance_start = 1000.0
         session1.cash_register_balance_end_real = 1200.0
         session1.action_pos_session_closing_control()
-        session1.action_pos_session_close()
 
         # Second session — should capture expected opening from session1
         session2 = self._create_session()
@@ -699,7 +709,6 @@ class TestClosingValidation(TransactionCase):
         session1.cash_register_balance_start = 1000.0
         session1.cash_register_balance_end_real = 1200.0
         session1.action_pos_session_closing_control()
-        session1.action_pos_session_close()
 
         # Create second session
         session2 = self._create_session()
@@ -718,7 +727,6 @@ class TestClosingValidation(TransactionCase):
         session1.cash_register_balance_start = 1000.0
         session1.cash_register_balance_end_real = 1200.0
         session1.action_pos_session_closing_control()
-        session1.action_pos_session_close()
 
         # Create second session
         session2 = self._create_session()
@@ -738,7 +746,6 @@ class TestClosingValidation(TransactionCase):
         session1.cash_register_balance_start = 1000.0
         session1.cash_register_balance_end_real = 1200.0
         session1.action_pos_session_closing_control()
-        session1.action_pos_session_close()
 
         session2 = self._create_session()
         session2.action_pos_session_open()
@@ -757,7 +764,6 @@ class TestClosingValidation(TransactionCase):
         session1.cash_register_balance_start = 1000.0
         session1.cash_register_balance_end_real = 1200.0
         session1.action_pos_session_closing_control()
-        session1.action_pos_session_close()
 
         session2 = self._create_session()
         session2.action_pos_session_open()
@@ -969,12 +975,13 @@ class TestClosingValidation(TransactionCase):
         session = self._create_session()
         session.cash_register_balance_start = 1000.0
 
-        # Create movements up to limit
+        # Create 2 movements to reach the configured limit
         self._create_cash_move(session, 100.0)
         self._create_cash_move(session, -50.0)
 
-        # Manually create an extra statement line to simulate inconsistency
-        # (bypassing the limit check)
+        # Manually inject a third line already tagged pos_cash_move=True to
+        # simulate a data inconsistency (limit was raised after creation, or
+        # direct DB manipulation). Bypassing our try_cash_in_out guard.
         cash_pm = session.payment_method_ids.filtered(
             lambda pm: pm.type == "cash"
         )[:1]
@@ -984,10 +991,13 @@ class TestClosingValidation(TransactionCase):
             "journal_id": journal.id,
             "amount": 25.0,
             "pos_session_id": session.id,
+            "pos_cash_move": True,
         })
 
-        # Now we have 3 movements but limit is 2
-        error = session.post_closing_cash_details(1000.0)
+        # Expected cash: 1000 + 0 (sales) + (100 + 25) cash_in - 50 cash_out = 1075
+        # Use counted_cash = 1075 so the authorized-difference check passes
+        # and the integrity check (count > limit) fires.
+        error = session.post_closing_cash_details(1075.0)
 
         self.assertTrue(error)
         self.assertFalse(error["successful"])
@@ -1018,3 +1028,82 @@ class TestClosingValidation(TransactionCase):
         # Rescue sessions should be blocked by _get_blocking_reasons
         self.assertTrue(error)
         self.assertFalse(error["successful"])
+
+    # ==================================================================
+    # OPTIMIZACIÓN — _filter_non_empty_rescues (batched)
+    # ==================================================================
+
+    def test_filter_non_empty_rescues_returns_correct_subset(self):
+        """_filter_non_empty_rescues returns only rescues with data."""
+        product = self.env["product.product"].create({
+            "name": "Test Product",
+            "list_price": 50.0,
+            "taxes_id": [(6, 0, [])],
+        })
+
+        empty_rescue = self._create_session(rescue=True)
+        empty_rescue.cash_register_balance_start = 1000.0
+
+        rescue_with_order = self._create_session(rescue=True)
+        rescue_with_order.cash_register_balance_start = 1000.0
+        self._create_order(rescue_with_order, product, 50.0)
+
+        rescue_with_payment = self._create_session(rescue=True)
+        rescue_with_payment.cash_register_balance_start = 1000.0
+        order_with_pay = self._create_order(rescue_with_payment, product, 50.0)
+        self.env["pos.payment"].create({
+            "pos_order_id": order_with_pay.id,
+            "payment_method_id": self.cash_payment_method.id,
+            "amount": 50.0,
+            "payment_date": fields.Datetime.now(),
+        })
+
+        all_rescues = empty_rescue | rescue_with_order | rescue_with_payment
+        non_empty = all_rescues._filter_non_empty_rescues()
+
+        self.assertNotIn(empty_rescue, non_empty)
+        self.assertIn(rescue_with_order, non_empty)
+        self.assertIn(rescue_with_payment, non_empty)
+        self.assertEqual(len(non_empty), 2)
+
+    def test_filter_non_empty_rescues_empty_recordset(self):
+        """_filter_non_empty_rescues on empty recordset returns empty."""
+        empty = self.env["pos.session"]
+        result = empty._filter_non_empty_rescues()
+        self.assertEqual(len(result), 0)
+
+    def test_filter_non_empty_rescues_all_empty(self):
+        """_filter_non_empty_rescues with all empty rescues returns empty."""
+        r1 = self._create_session(rescue=True)
+        r1.cash_register_balance_start = 1000.0
+        r2 = self._create_session(rescue=True)
+        r2.cash_register_balance_start = 1000.0
+        result = (r1 | r2)._filter_non_empty_rescues()
+        self.assertEqual(len(result), 0)
+
+    def test_check_rescue_sessions_pending_uses_batched_filter(self):
+        """_check_rescue_sessions_pending blocks only non-empty rescues."""
+        parent = self._create_session()
+        parent.cash_register_balance_start = 1000.0
+
+        # Empty rescue: should NOT block closing
+        empty_rescue = self._create_session(rescue=True)
+        empty_rescue.cash_register_balance_start = 1000.0
+
+        # After adding empty rescue, still should not block
+        result = parent._check_rescue_sessions_pending()
+        self.assertIsNone(result)
+
+        # Adding rescue with order: should block
+        product = self.env["product.product"].create({
+            "name": "Test Product",
+            "list_price": 25.0,
+            "taxes_id": [(6, 0, [])],
+        })
+        active_rescue = self._create_session(rescue=True)
+        active_rescue.cash_register_balance_start = 1000.0
+        self._create_order(active_rescue, product, 25.0)
+
+        result = parent._check_rescue_sessions_pending()
+        self.assertTrue(result)
+        self.assertIn("rescate", result["message"].lower())

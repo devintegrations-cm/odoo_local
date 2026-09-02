@@ -45,17 +45,25 @@ class PosConfig(models.Model):
         dashboard, BEFORE the session is created and BEFORE the browser
         is redirected to the POS UI.
 
-        Only validates when:
-        - There is no current session (same condition as Odoo core)
-        - ``enable_rescue_session_validation`` is enabled for this POS
+        The check fires when:
+        - ``enable_rescue_session_validation`` is enabled for this POS, AND
+        - There is at least one pending rescue session for this config, AND
+        - Either the user has no current session (about to create a new one),
+          OR their current session IS a rescue (which the /pos/ui controller
+          filters out anyway, causing a silent bounce to the dashboard).
+
+        Blocking here gives operators a clear message instead of the Odoo
+        controller's silent dashboard redirect.
         """
         self.ensure_one()
 
-        if not self.current_session_id and self.enable_rescue_session_validation:
+        if self.enable_rescue_session_validation:
             pending = self.env["pos.session"]._get_pending_rescue_sessions_for_config(
                 self.id
             )
-            if pending:
+            if pending and (
+                not self.current_session_id or self.current_session_id.rescue
+            ):
                 names = ", ".join(pending.mapped("name"))
                 raise UserError(_(
                     "No puede abrir una nueva sesión porque existe(n) "

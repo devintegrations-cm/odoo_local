@@ -5,21 +5,20 @@
     <!-- Cash move popup extension -->
     <t t-inherit="point_of_sale.CashMovePopup" t-inherit-mode="extension">
 
-        <!-- Rescue banner + validation info before the form -->
+        <!-- Cash summary before the form -->
         <xpath expr="//div[contains(@class, 'form-floating')]" position="before">
 
-            <div t-if="closingValidation.is_rescue"
+            <!-- Load error alert: shown when the backend call failed -->
+            <div t-if="state.loadError"
                  class="alert alert-warning mt-2 mb-2"
                  role="alert">
-                <strong>SESIÓN DE RECUPERACIÓN</strong>
-                <div class="mt-1 text-muted small">
-                    Esta sesión está recuperando operaciones de una sesión anterior.
-                    Verifique que todos los movimientos se sincronicen correctamente.
-                </div>
+                <strong>No se pudo cargar la información. </strong>
+                Cierre esta ventana y vuelva a intentarlo. Si el problema
+                persiste, contacte a un administrador del Punto de Venta.
             </div>
 
-            <!-- Cash summary from snapshot -->
-            <div class="mt-2 mb-2 p-2 border rounded">
+            <!-- Cash summary (only when load is OK) -->
+            <div t-if="!state.loadError" class="mt-2 mb-2 p-2 border rounded">
                 <div class="fw-bold mb-1 small">
                     Resumen de efectivo
                 </div>
@@ -48,8 +47,9 @@
                 </div>
             </div>
 
-            <!-- Limit reached alert -->
-            <div t-if="state.isLimitReached"
+            <!-- Limit reached alert (only when load is OK to avoid
+                 misreading a network error as "you hit your limit") -->
+            <div t-if="state.isLimitReached &amp;&amp; !state.loadError"
                  class="alert alert-danger mt-2 mb-2"
                  role="alert">
                 <strong>Límite alcanzado: </strong>
@@ -63,7 +63,7 @@
         <!-- Movement counter after the form -->
         <xpath expr="//div[contains(@class, 'form-floating')]" position="after">
 
-            <div class="text-muted small mt-2 text-end">
+            <div t-if="!state.loadError" class="text-muted small mt-2 text-end">
                 Movimientos:
                 <t t-esc="cashMoveControl.count"/>
                 /

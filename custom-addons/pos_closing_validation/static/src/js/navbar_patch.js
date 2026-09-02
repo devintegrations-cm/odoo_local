@@ -9,6 +9,16 @@ import { ClosePosPopup } from "@point_of_sale/app/navbar/closing_popup/closing_p
 import { ErrorPopup } from "@point_of_sale/app/errors/popups/error_popup";
 import { RescueSessionWarningPopup } from "@pos_closing_validation/js/rescue_session_warning_popup";
 
+/**
+ * Odoo's ClosePosPopup has strict OWL 2 props validation.  Our backend
+ * enriches ``get_closing_control_data`` with extra validation fields
+ * that are consumed by ``closeSession()`` BEFORE the popup opens, so
+ * they should NOT be forwarded to the popup component itself.
+ *
+ * This filter whitelists only the props the standard popup renders plus
+ * our ``expected_cash`` summary field consumed by our template
+ * extension in ``closing_popup_extension.xml``.
+ */
 const CLOSE_POS_POPUP_ALLOWED_PROPS = [
     "orders_details",
     "opening_notes",
@@ -16,6 +26,7 @@ const CLOSE_POS_POPUP_ALLOWED_PROPS = [
     "other_payment_methods",
     "is_manager",
     "amount_authorized_diff",
+    "expected_cash",
 ];
 
 function _pickClosePosProps(info) {
@@ -71,22 +82,22 @@ patch(Navbar.prototype, {
             return;
         }
 
-        if (info.is_rescue && !info.has_orders) {
-            await this.popup.add(RescueSessionWarningPopup, {
-                title: _t("Sesión de rescate vacía"),
+        if (info.is_rescue) {
+            await this.popup.add(ErrorPopup, {
+                title: _t("Sesión no sincronizada"),
                 body: _t(
-                    "Esta sesión de rescate no tiene órdenes registradas. " +
-                    "Actualice la página para iniciar una nueva sesión."
+                    "El Punto de Venta no está sincronizado con la sesión " +
+                    "actual. Actualice la página y vuelva a intentarlo."
                 ),
             });
             return;
         }
 
-        if (!info.is_rescue && info.must_block) {
+        if (info.state !== "opened") {
             await this.popup.add(RescueSessionWarningPopup, {
                 title: _t("Sesión no disponible"),
                 body: _t(
-                    "Esta sesión ya no está disponible para operaciones de efectivo. " +
+                    "Esta sesión no está disponible para operaciones de efectivo. " +
                     "Actualice la página para continuar."
                 ),
             });
@@ -112,12 +123,29 @@ patch(Navbar.prototype, {
             return;
         }
 
-        if (!info || !info.default_cash_details) {
+        if (!info) {
             await this.popup.add(ErrorPopup, {
                 title: _t("Error"),
                 body: _t(
                     "No se pudo obtener la información de cierre. " +
                     "Intente de nuevo."
+                ),
+            });
+            return;
+        }
+
+        // Configurations with cash control enabled must have a cash payment
+        // method configured.  Configurations without cash control legitimately
+        // have no default_cash_details (e.g. events with only card payments),
+        // and Odoo's ClosePosPopup already handles that case internally via
+        // its own ``t-if="pos.config.cash_control"`` guard.
+        if (this.pos.config.cash_control && !info.default_cash_details) {
+            await this.popup.add(ErrorPopup, {
+                title: _t("Error de configuración"),
+                body: _t(
+                    "El Punto de Venta tiene control de efectivo activado " +
+                    "pero no tiene un método de pago de efectivo configurado. " +
+                    "Contacte a un administrador."
                 ),
             });
             return;

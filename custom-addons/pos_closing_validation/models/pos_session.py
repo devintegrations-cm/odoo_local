@@ -252,8 +252,21 @@ class PosSession(models.Model):
 
         Serialises the operation with ``FOR UPDATE`` to prevent concurrent
         terminals from exceeding the limit simultaneously.
+
+        Cash In/Out movements are not permitted on rescue sessions. The
+        user sees a friendly message (POS not synchronized) rather than
+        a technical reference to "rescue" to avoid confusing store staff.
         """
         self.ensure_one()
+
+        if self.rescue:
+            raise UserError(_(
+                "El Punto de Venta no está sincronizado con la sesión "
+                "actual.\n\n"
+                "Actualice la página del Punto de Venta y vuelva a "
+                "intentarlo.\n\n"
+                "Si el problema persiste, contacte a un administrador."
+            ))
 
         self.env.cr.execute(
             "SELECT id FROM pos_session WHERE id = %s FOR UPDATE",
@@ -336,6 +349,42 @@ class PosSession(models.Model):
         )
         return not (has_orders or has_payments or has_statement_lines)
 
+    def _filter_non_empty_rescues(self):
+        """Return the subset of self with orders, payments, or statement lines.
+
+        Batched equivalent of ``filtered(lambda s: not s._is_empty_rescue())``.
+        Executes 3 database queries total regardless of how many rescue
+        sessions are in the recordset, so cost stays constant as
+        accumulated rescues grow across sedes.
+
+        Non-rescue sessions in self are always excluded from the result
+        (the method is designed for filtering rescue sessions).
+        """
+        rescue_ids = self.filtered(lambda s: s.rescue).ids
+        if not rescue_ids:
+            return self.env["pos.session"]
+
+        with_orders = set(
+            self.env["pos.order"].search([
+                ("session_id", "in", rescue_ids),
+            ]).mapped("session_id.id")
+        )
+        with_payments = set(
+            self.env["pos.payment"].search([
+                ("session_id", "in", rescue_ids),
+            ]).mapped("session_id.id")
+        )
+        # statement.line access requires sudo for POS users; matches the
+        # pattern used elsewhere in this module (see _get_closing_cash_validation_data)
+        with_lines = set(
+            self.env["account.bank.statement.line"].sudo().search([
+                ("pos_session_id", "in", rescue_ids),
+            ]).mapped("pos_session_id.id")
+        )
+
+        non_empty_ids = list(with_orders | with_payments | with_lines)
+        return self.browse(non_empty_ids)
+
     def _check_rescue_sessions_pending(self):
         """Return error dict if non-empty rescue sessions are open.
 
@@ -351,9 +400,7 @@ class PosSession(models.Model):
         if not self.config_id.enable_rescue_session_validation:
             return None
 
-        rescue_sessions = self._get_pending_rescue_sessions().filtered(
-            lambda s: not s._is_empty_rescue()
-        )
+        rescue_sessions = self._get_pending_rescue_sessions()._filter_non_empty_rescues()
 
         if rescue_sessions:
             return {
@@ -381,13 +428,30 @@ class PosSession(models.Model):
         The lock is acquired at the start to ensure that two terminals
         cannot simultaneously close the same session with stale snapshots.
 
-        Flow:
-        1. LOCK SESSION (FOR UPDATE)
-        2. Invalidate cache (fresh data)
-        3. Re-check all validations with fresh data
-        4. If all OK, call super() to store counted_cash and proceed
+        Rescue sessions cannot be closed through this endpoint — they must
+        be closed from the backend view. This is consistent with the
+        business rule that rescue sessions are backend-only.
+
+        Only validations unique to this method run here (cash difference,
+        which must be checked BEFORE super writes counted_cash).  All
+        other validations (rescue pending, cash in/out integrity, data
+        integrity) are handled by our ``_cannot_close_session`` override,
+        which Odoo's standard ``post_closing_cash_details`` invokes
+        internally before writing the counted balance.
         """
         self.ensure_one()
+
+        # Rescue sessions are backend-only; refuse to close from POS flow.
+        if self.rescue:
+            return {
+                "successful": False,
+                "message": _(
+                    "Las sesiones de rescate no pueden cerrarse desde el "
+                    "Punto de Venta. Cierre la sesión desde la vista del "
+                    "backend."
+                ),
+                "redirect": False,
+            }
 
         # Step 1: Acquire row-level lock
         self.env.cr.execute(
@@ -398,29 +462,15 @@ class PosSession(models.Model):
         # Step 2: Invalidate ORM cache — subsequent reads hit the database
         self.invalidate_recordset()
 
-        # Step 3: Re-validate with fresh data
-        # 3a: Cash difference
+        # Step 3: Unique validation — must run before super because
+        # super stores counted_cash in cash_register_balance_end_real.
         error = self._check_authorized_cash_difference(counted_cash)
         if error:
             return error
 
-        # 3b: Rescue sessions pending (re-evaluate after lock)
-        if not self.rescue and self.config_id.enable_rescue_session_validation:
-            rescue_error = self._check_rescue_sessions_pending()
-            if rescue_error:
-                return rescue_error
-
-        # 3c: Cash In/Out integrity
-        integrity_error = self._check_cash_in_out_integrity()
-        if integrity_error:
-            return integrity_error
-
-        # 3d: Data integrity
-        data_integrity = self._check_session_data_integrity()
-        if data_integrity:
-            return data_integrity
-
-        # Step 4: All validations passed — proceed with Odoo standard close
+        # Step 4: Odoo's standard flow — calls _cannot_close_session
+        # (our override) which re-checks rescue pending, integrity,
+        # and data consistency with fresh (post-lock) data.
         return super().post_closing_cash_details(counted_cash)
 
     def _check_authorized_cash_difference(self, counted_cash):
@@ -464,54 +514,6 @@ class PosSession(models.Model):
         return None
 
     # ------------------------------------------------------------------
-    # Closing validation: rescue session close
-    # ------------------------------------------------------------------
-
-    def action_pos_session_closing_control(
-        self, balancing_account=False, amount_to_balance=0,
-        bank_payment_method_diffs=None,
-    ):
-        """Override to recompute cash_register_balance_end_real for rescue
-        sessions so that Cash In/Out movements are included in the
-        closing balance.
-
-        Odoo's default rescue close only considers order payments + opening,
-        ignoring Cash In/Out statement lines.  This override fixes that.
-        """
-        for session in self:
-            if session.rescue and session.config_id.cash_control:
-                cash_pm = session.payment_method_ids.filtered(
-                    lambda pm: pm.type == "cash"
-                )[:1]
-
-                cash_sales = 0.0
-                if cash_pm:
-                    cash_sales = sum(
-                        self.env["pos.payment"]
-                        .search([
-                            ("session_id", "=", session.id),
-                            ("payment_method_id", "=", cash_pm.id),
-                        ])
-                        .mapped("amount")
-                    )
-
-                cash_in_out = sum(
-                    session.statement_line_ids.filtered(
-                        lambda l: l.pos_cash_move
-                    ).mapped("amount")
-                )
-
-                session.cash_register_balance_end_real = (
-                    session.cash_register_balance_start
-                    + cash_sales
-                    + cash_in_out
-                )
-
-        return super().action_pos_session_closing_control(
-            balancing_account, amount_to_balance, bank_payment_method_diffs
-        )
-
-    # ------------------------------------------------------------------
     # Cash In/Out integrity
     # ------------------------------------------------------------------
 
@@ -529,24 +531,16 @@ class PosSession(models.Model):
         maximum = self.config_id.maximum_cash_in_out_moves
 
         if current_count > maximum:
-            rescue_note = ""
-            if self.rescue:
-                rescue_note = _(
-                    "\n\nEsta es una sesión de rescate. Los movimientos "
-                    "pueden haber sido heredados de la sesión original."
-                )
             return {
                 "successful": False,
                 "message": _(
                     "Existe una inconsistencia en los movimientos de efectivo.\n\n"
                     "Se registraron %(current)s movimientos, pero el límite "
-                    "configurado es de %(maximum)s."
-                    "%(rescue_note)s\n\n"
+                    "configurado es de %(maximum)s.\n\n"
                     "No puede cerrar la sesión hasta que se resuelva esta "
                     "situación. Contacte a un responsable del Punto de Venta.",
                     current=current_count,
                     maximum=maximum,
-                    rescue_note=rescue_note,
                 ),
                 "redirect": False,
             }
