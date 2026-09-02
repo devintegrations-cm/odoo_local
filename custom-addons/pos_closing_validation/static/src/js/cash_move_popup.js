@@ -23,26 +23,33 @@ patch(CashMovePopup.prototype, {
         };
 
         this.state.isLimitReached = false;
+        this.state.loadError = false;
 
         onWillStart(async () => {
-            const [controlData, closingInfo] = await Promise.all([
-                this.orm.call(
-                    "pos.session",
-                    "get_cash_in_out_control_data",
-                    [[this.pos.pos_session.id]]
-                ),
-                this.orm.call(
-                    "pos.session",
-                    "get_closing_validation_info",
-                    [[this.pos.pos_session.id]]
-                ),
-            ]);
+            try {
+                const [controlData, closingInfo] = await Promise.all([
+                    this.orm.call(
+                        "pos.session",
+                        "get_cash_in_out_control_data",
+                        [[this.pos.pos_session.id]]
+                    ),
+                    this.orm.call(
+                        "pos.session",
+                        "get_closing_validation_info",
+                        [[this.pos.pos_session.id]]
+                    ),
+                ]);
 
-            this.cashMoveControl = controlData;
-            this.closingValidation = closingInfo;
+                this.cashMoveControl = controlData;
+                this.closingValidation = closingInfo;
 
-            this.state.isLimitReached =
-                this.cashMoveControl.count >= this.cashMoveControl.limit;
+                this.state.isLimitReached =
+                    this.cashMoveControl.count >= this.cashMoveControl.limit;
+            } catch (error) {
+                // RPC failed — block the popup to prevent unsafe operations
+                this.state.loadError = true;
+                this.state.isLimitReached = true;
+            }
         });
     },
 

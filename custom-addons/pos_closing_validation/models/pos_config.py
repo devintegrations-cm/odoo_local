@@ -1,5 +1,5 @@
-from odoo import api, fields, models
-from odoo.exceptions import ValidationError
+from odoo import api, fields, models, _
+from odoo.exceptions import UserError, ValidationError
 
 
 class PosConfig(models.Model):
@@ -37,6 +37,37 @@ class PosConfig(models.Model):
                 raise ValidationError(
                     "El máximo de movimientos de efectivo debe ser mayor que cero."
                 )
+
+    def open_ui(self):
+        """Validate pending rescue sessions before opening a new session.
+
+        This runs on the backend when the operator clicks "Open" from the
+        dashboard, BEFORE the session is created and BEFORE the browser
+        is redirected to the POS UI.
+
+        Only validates when:
+        - There is no current session (same condition as Odoo core)
+        - ``enable_rescue_session_validation`` is enabled for this POS
+        """
+        self.ensure_one()
+
+        if not self.current_session_id and self.enable_rescue_session_validation:
+            pending = self.env["pos.session"]._get_pending_rescue_sessions_for_config(
+                self.id
+            )
+            if pending:
+                names = ", ".join(pending.mapped("name"))
+                raise UserError(_(
+                    "No puede abrir una nueva sesión porque existe(n) "
+                    "%(count)s sesión(es) de rescate pendiente(s) "
+                    "para este Punto de Venta.\n\n"
+                    "Sesiones pendientes: %(names)s\n\n"
+                    "Cierre las sesiones de rescate antes de continuar.",
+                    count=len(pending),
+                    names=names,
+                ))
+
+        return super().open_ui()
 
 
 class ResConfigSettings(models.TransientModel):

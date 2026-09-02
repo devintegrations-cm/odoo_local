@@ -27,6 +27,15 @@ class PosSession(models.Model):
         string="Sesiones de Rescate",
         readonly=True,
     )
+    expected_opening_balance = fields.Monetary(
+        string="Saldo de apertura esperado",
+        readonly=True,
+        copy=False,
+        help="Saldo que Odoo calculó automáticamente al abrir la sesión. "
+             "Se compara con el saldo ingresado por el operador para detectar "
+             "inconsistencias de continuidad de caja.",
+        currency_field="currency_id",
+    )
 
     # ------------------------------------------------------------------
     # Snapshot: single source of truth for closing validation
@@ -145,6 +154,80 @@ class PosSession(models.Model):
         self.ensure_one()
         return self._get_closing_cash_validation_data()
 
+    def _get_blocking_reasons(self):
+        """Return list of strings explaining why this session cannot close.
+
+        Aggregates all blocking conditions into a single list for the
+        frontend to display.
+        """
+        self.ensure_one()
+        reasons = []
+
+        if self.rescue:
+            reasons.append("Sesión de rescate no puede cerrarse desde aquí.")
+
+        if self.state == "closed":
+            reasons.append("La sesión ya está cerrada.")
+
+        if self.state == "closing_control":
+            reasons.append("La sesión ya está en proceso de cierre.")
+
+        if (
+            not self.rescue
+            and self.config_id.enable_rescue_session_validation
+        ):
+            pending = self._get_pending_rescue_sessions()
+            if pending:
+                names = ", ".join(pending.mapped("name"))
+                reasons.append(
+                    f"Sesiones de rescate pendientes: {names}"
+                )
+
+        integrity = self._check_cash_in_out_integrity()
+        if integrity:
+            reasons.append(integrity["message"])
+
+        data_integrity = self._check_session_data_integrity()
+        if data_integrity:
+            reasons.append(data_integrity["message"])
+
+        return reasons
+
+    def get_closing_control_data(self):
+        """Override: enrich standard Odoo closing data with validation fields.
+
+        This is the single source of truth for the closing popup.
+        The frontend ``ClosePosPopup`` consumes this data directly.
+        """
+        data = super().get_closing_control_data()
+
+        validation = self._get_closing_cash_validation_data()
+        pending = self._get_pending_rescue_sessions()
+        reasons = self._get_blocking_reasons()
+
+        data.update({
+            "pending_rescue": bool(pending),
+            "pending_rescue_sessions": [
+                {"id": s.id, "name": s.name, "state": s.state}
+                for s in pending
+            ],
+            "can_close": not bool(reasons),
+            "blocking_reasons": reasons,
+            "session_id": self.id,
+            "session_name": self.name,
+            "is_rescue": self.rescue,
+            "opening_cash": validation["opening_cash"],
+            "cash_sales": validation["cash_sales"],
+            "cash_in": validation["cash_in"],
+            "cash_out": validation["cash_out"],
+            "expected_cash": validation["expected_cash"],
+            "difference": validation["difference"],
+            "cash_move_count": validation["cash_move_count"],
+            "cash_move_limit": self.config_id.maximum_cash_in_out_moves,
+        })
+
+        return data
+
     def _check_cash_in_out_limit(self):
         """Raise UserError if the Cash In/Out limit is reached."""
         self.ensure_one()
@@ -254,22 +337,23 @@ class PosSession(models.Model):
         return not (has_orders or has_payments or has_statement_lines)
 
     def _check_rescue_sessions_pending(self):
-        """Return error dict if there are open rescue sessions for this config.
+        """Return error dict if non-empty rescue sessions are open.
 
-        Blocks the session close and advises the user to review rescue
-        sessions before proceeding.  Empty rescue sessions (no orders,
-        no payments, no statement lines) are ignored.
+        CLOSING validation: only blocks if the rescue has meaningful data
+        (orders, payments, or statement lines).  Empty rescues are ignored
+        because they do not affect the parent session's cash integrity.
+
+        This is stricter for OPENING (see ``_check_pending_rescue_sessions``)
+        where ANY open rescue blocks, regardless of emptiness.
         """
         self.ensure_one()
 
         if not self.config_id.enable_rescue_session_validation:
             return None
 
-        rescue_sessions = self.search([
-            ("config_id", "=", self.config_id.id),
-            ("rescue", "=", True),
-            ("state", "!=", "closed"),
-        ]).filtered(lambda s: not s._is_empty_rescue())
+        rescue_sessions = self._get_pending_rescue_sessions().filtered(
+            lambda s: not s._is_empty_rescue()
+        )
 
         if rescue_sessions:
             return {
@@ -292,17 +376,51 @@ class PosSession(models.Model):
     # ------------------------------------------------------------------
 
     def post_closing_cash_details(self, counted_cash):
-        """Validate cash difference BEFORE Odoo stores the counted cash.
+        """Validate and close with FOR UPDATE to prevent race conditions.
 
-        Uses the snapshot to compute the expected value, ensuring
-        consistent results between backend and frontend.
+        The lock is acquired at the start to ensure that two terminals
+        cannot simultaneously close the same session with stale snapshots.
+
+        Flow:
+        1. LOCK SESSION (FOR UPDATE)
+        2. Invalidate cache (fresh data)
+        3. Re-check all validations with fresh data
+        4. If all OK, call super() to store counted_cash and proceed
         """
         self.ensure_one()
 
+        # Step 1: Acquire row-level lock
+        self.env.cr.execute(
+            "SELECT id FROM pos_session WHERE id = %s FOR UPDATE",
+            (self.id,),
+        )
+
+        # Step 2: Invalidate ORM cache — subsequent reads hit the database
+        self.invalidate_recordset()
+
+        # Step 3: Re-validate with fresh data
+        # 3a: Cash difference
         error = self._check_authorized_cash_difference(counted_cash)
         if error:
             return error
 
+        # 3b: Rescue sessions pending (re-evaluate after lock)
+        if not self.rescue and self.config_id.enable_rescue_session_validation:
+            rescue_error = self._check_rescue_sessions_pending()
+            if rescue_error:
+                return rescue_error
+
+        # 3c: Cash In/Out integrity
+        integrity_error = self._check_cash_in_out_integrity()
+        if integrity_error:
+            return integrity_error
+
+        # 3d: Data integrity
+        data_integrity = self._check_session_data_integrity()
+        if data_integrity:
+            return data_integrity
+
+        # Step 4: All validations passed — proceed with Odoo standard close
         return super().post_closing_cash_details(counted_cash)
 
     def _check_authorized_cash_difference(self, counted_cash):
@@ -502,3 +620,137 @@ class PosSession(models.Model):
                 if last_normal:
                     vals["rescue_parent_session_id"] = last_normal.id
         return super().create(vals_list)
+
+    # ------------------------------------------------------------------
+    # Opening balance audit
+    # ------------------------------------------------------------------
+
+    def action_pos_session_open(self):
+        """Override to capture the expected opening balance.
+
+        When Odoo sets ``cash_register_balance_start`` from the previous
+        session's closing balance, we store it in ``expected_opening_balance``
+        so that ``set_cashbox_pos`` can later compare it with the value
+        entered by the operator.
+        """
+        for session in self.filtered(lambda s: s.state == "opening_control"):
+            if session.config_id.cash_control and not session.rescue:
+                last_session = self.search([
+                    ("config_id", "=", session.config_id.id),
+                    ("id", "!=", session.id),
+                ], limit=1)
+                if last_session:
+                    session.expected_opening_balance = (
+                        last_session.cash_register_balance_end_real
+                    )
+
+        return super().action_pos_session_open()
+
+    def set_cashbox_pos(self, cashbox_value, notes):
+        """Override to validate opening balance continuity.
+
+        Compares the value entered by the operator with the expected
+        opening balance calculated by Odoo.  If the difference exceeds
+        the configured maximum, blocks the operation.
+        """
+        self.ensure_one()
+
+        if (
+            self.config_id.set_maximum_difference
+            and self.expected_opening_balance
+        ):
+            difference = abs(cashbox_value - self.expected_opening_balance)
+            maximum = self.config_id.amount_authorized_diff
+
+            if difference > maximum:
+                raise UserError(_(
+                    "Inconsistencia de continuidad de caja.\n\n"
+                    "Saldo esperado (calculado por el sistema): %(expected)s\n"
+                    "Saldo ingresado por el operador: %(entered)s\n"
+                    "Diferencia: %(diff)s\n"
+                    "Máximo autorizado: %(maximum)s\n\n"
+                    "El saldo ingresado difiere significativamente del saldo "
+                    "que el sistema esperaba basándose en la sesión anterior. "
+                    "Contacte a un responsable del Punto de Venta.",
+                    expected=self.currency_id.format(
+                        self.expected_opening_balance
+                    ),
+                    entered=self.currency_id.format(cashbox_value),
+                    diff=self.currency_id.format(difference),
+                    maximum=self.currency_id.format(maximum),
+                ))
+
+        return super().set_cashbox_pos(cashbox_value, notes)
+
+    # ------------------------------------------------------------------
+    # Cycle validation: pending rescue sessions
+    # ------------------------------------------------------------------
+
+    def _get_pending_rescue_sessions_for_config(self, config_id):
+        """Return open rescue sessions for a POS config.
+
+        Any rescue session with state != 'closed' is considered pending,
+        regardless of whether it has orders or not.  This is stricter than
+        the closing validation which ignores empty rescues.
+        """
+        return self.search([
+            ("config_id", "=", config_id),
+            ("rescue", "=", True),
+            ("state", "!=", "closed"),
+        ])
+
+    def _has_pending_rescue_sessions(self):
+        """Return True if this session's config has open rescue sessions."""
+        self.ensure_one()
+        return bool(
+            self._get_pending_rescue_sessions_for_config(self.config_id.id)
+        )
+
+    def _get_pending_rescue_sessions(self):
+        """Return recordset of open rescue sessions for this config."""
+        self.ensure_one()
+        return self._get_pending_rescue_sessions_for_config(self.config_id.id)
+
+    def _get_pending_rescue_validation_data(self):
+        """Return structured data about pending rescue sessions.
+
+        Used by both backend validation and frontend display.
+        """
+        self.ensure_one()
+        rescues = self._get_pending_rescue_sessions()
+        return [
+            {"id": s.id, "name": s.name, "state": s.state}
+            for s in rescues
+        ]
+
+    def _check_pending_rescue_sessions(self):
+        """Return error dict if any rescue session is open for this config.
+
+        For OPENING validation: any open rescue blocks, no exceptions.
+        Empty rescues are NOT ignored here — the operator must close or
+        resolve every rescue before opening a new normal session.
+
+        Returns ``None`` if no pending rescues exist.
+        """
+        self.ensure_one()
+        pending = self._get_pending_rescue_sessions()
+        if pending:
+            names = ", ".join(pending.mapped("name"))
+            return {
+                "blocked": True,
+                "reason": "pending_rescue",
+                "message": _(
+                    "No puede abrir una nueva sesión porque existe(n) "
+                    "%(count)s sesión(es) de rescate pendiente(s) "
+                    "para este Punto de Venta.\n\n"
+                    "Sesiones pendientes: %(names)s\n\n"
+                    "Cierre las sesiones de rescate antes de continuar.",
+                    count=len(pending),
+                    names=names,
+                ),
+                "sessions": [
+                    {"id": s.id, "name": s.name}
+                    for s in pending
+                ],
+            }
+        return {"blocked": False, "reason": "", "sessions": []}
