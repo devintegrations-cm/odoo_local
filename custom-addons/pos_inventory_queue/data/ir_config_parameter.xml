@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo noupdate="1">
+    <!--
+        Default GLOBAL del interruptor de la cola de inventario del POS.
+        Se materializa aqui solo para visibilidad/autodescubrimiento en
+        Technical > System Parameters; el codigo ya asume 'True' si la
+        fila no existe (default en default_get y en _is_queue_enabled).
+
+        noupdate="1": un -u del modulo NO pisa el valor si el usuario lo
+        cambio desde la UI (p. ej. a 'False').
+    -->
+    <record id="param_pos_inventory_queue_enabled" model="ir.config_parameter">
+        <field name="key">pos_inventory_queue.enabled</field>
+        <field name="value">True</field>
+    </record>
+</odoo>

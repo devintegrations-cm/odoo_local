@@ -8,14 +8,14 @@ class PosConfig(models.Model):
     _inherit = "pos.config"
 
     maximum_cash_in_out_moves = fields.Integer(
-        string="Máximo de movimientos de efectivo",
+        string="Máximo de movimientos de efectivo. ",
         default=2,
         required=True,
         help="Número máximo de movimientos Cash In/Out permitidos por sesión.",
     )
 
     cash_difference_exceeded_message = fields.Text(
-        string="Mensaje de diferencia de efectivo",
+        string="Mensaje de diferencia de efectivo: ",
         help="Texto que se muestra cuando la diferencia de efectivo supera el máximo "
              "autorizado al cerrar la sesión. Solo escriba el texto; los valores de la "
              "diferencia y del máximo autorizado se añaden automáticamente al final. "

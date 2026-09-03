@@ -8,7 +8,8 @@ import psycopg2
 from psycopg2 import errors as psycopg2_errors
 from psycopg2.pool import PoolError
 
-from odoo import api, fields, models
+from odoo import api, fields, models, _
+from odoo.tools.misc import str2bool
 
 _logger = logging.getLogger(__name__)
 
@@ -700,6 +701,34 @@ class PosInventoryQueue(models.Model):
                 queue_put_cursor(new_cr)
 
     # -------------------------------------------------------------------------
+    # HELPER: global on/off switch (NOT per POS)
+    # -------------------------------------------------------------------------
+
+    @api.model
+    def _is_queue_enabled(self):
+        """
+        Interruptor GLOBAL de la cola de inventario del POS.
+
+        Se guarda en ir.config_parameter ('pos_inventory_queue.enabled'),
+        no en pos.config: la cola es un mecanismo global (cron + pool
+        dedicado + advisory locks por recurso de stock), asi que el toggle
+        tampoco es por terminal. Default activado si el parametro no existe.
+
+        IMPORTANTE: este switch solo decide si una orden encolada NUEVA usa
+        la cola o se valida de forma sincronizada (comportamiento nativo).
+        El procesador (_claim_next_item/_process_queue) SIEMPRE drena, para
+        que al apagar el modulo lo ya pendiente termine y no quede un
+        picking sin validar en el limbo.
+        """
+        return str2bool(
+            self.env['ir.config_parameter'].sudo().get_param(
+                'pos_inventory_queue.enabled',
+                default='True',
+            ),
+            default=True,
+        )
+
+    # -------------------------------------------------------------------------
     # ACTIONS
     # -------------------------------------------------------------------------
 
@@ -740,3 +769,50 @@ class PosInventoryQueue(models.Model):
                 len(old_items),
                 days,
             )
+
+
+class ResConfigSettings(models.TransientModel):
+    _inherit = 'res.config.settings'
+
+    # GLOBAL: se persiste en ir.config_parameter ('pos_inventory_queue.enabled'),
+    # aplica a TODOS los POS. No cuelga de pos_config_id (la cola es un
+    # mecanismo global). Se gestiona MANUALMENTE en set_values/default_get en
+    # vez de con config_parameter= porque Odoo, para un Boolean, borra la fila
+    # al guardar False (set_param(key, False) == eliminar) y re-deriva el
+    # checkbox con bool('False') == True: con un 'ON por defecto' eso hace que
+    # apagar no persista. Ademas crear/borrar la fila rompe el binding al xmlid
+    # del data file y provoca UniqueViolation en los -u.
+    pos_inventory_queue_enabled = fields.Boolean(
+        string="POS Inventory Queue",
+        default=True,
+        help="Interruptor GLOBAL de la cola de inventario del POS. No depende "
+             "del punto de venta seleccionado: afecta a todos. Al desactivarla, "
+             "los pickings se validan de forma sincronizada (como si el modulo no "
+             "existiera) y la cola solo termina lo que ya estaba pendiente.",
+    )
+
+    def set_values(self):
+        super().set_values()
+        # Escribe sobre la MISMA fila (conserva id y el xmlid del data file);
+        # solo la crea si no existe. Evita el delete/recreate de config_parameter.
+        ICP = self.env['ir.config_parameter'].sudo()
+        value = 'True' if self.pos_inventory_queue_enabled else 'False'
+        row = ICP.search(
+            [('key', '=', 'pos_inventory_queue.enabled')], limit=1)
+        if row:
+            row.value = value
+        else:
+            ICP.set_param('pos_inventory_queue.enabled', value)
+
+    @api.model
+    def default_get(self, fields):
+        res = super().default_get(fields)
+        # Sin config_parameter, la UI debe leer el param explicitamente.
+        # str2bool evita el bug bool('False') == True.
+        if 'pos_inventory_queue_enabled' in fields:
+            res['pos_inventory_queue_enabled'] = str2bool(
+                self.env['ir.config_parameter'].sudo().get_param(
+                    'pos_inventory_queue.enabled', default='True'),
+                default=True,
+            )
+        return res

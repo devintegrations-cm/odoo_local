@@ -1,6 +1,6 @@
 {
     'name': 'Pos Inventory Queue',
-    'version': '17.0.1.1.0',
+    'version': '17.0.1.2.1',
     'category': 'Point of Sale',
     'summary': 'Serializes POS real-time inventory operations to prevent concurrency',
     'description': """
@@ -19,8 +19,10 @@
     'data': [
         'data/ir_sequence.xml',
         'data/ir_cron.xml',
+        'data/ir_config_parameter.xml',
         'security/ir.model.access.csv',
         'views/pos_inventory_queue_views.xml',
+        'views/res_config_settings_views.xml',
     ],
     'installable': True,
     'application': False,

@@ -45,7 +45,13 @@ class StockPicking(models.Model):
             negative_picking._create_move_from_pos_order_lines(negative_lines)
             pickings |= negative_picking
 
-        if self.env.context.get('pos_inventory_queue'):
+        # El contexto marca "picking POS en tiempo real" (lo pone
+        # pos_order._create_order_picking). La cola solo interviene si ADEMAS
+        # el interruptor GLOBAL esta activado. Apagado -> rama else ->
+        # _action_done() sincronizado = comportamiento nativo, como si el
+        # modulo no existiera (nada nuevo entra a la cola).
+        if self.env.context.get('pos_inventory_queue') and \
+                self.env['pos.inventory.queue']._is_queue_enabled():
             Queue = self.env['pos.inventory.queue']
             for picking in pickings:
                 Queue.create({'picking_id': picking.id, 'state': 'pending'})
