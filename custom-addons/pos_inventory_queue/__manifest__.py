@@ -22,7 +22,7 @@
         'data/ir_config_parameter.xml',
         'security/ir.model.access.csv',
         'views/pos_inventory_queue_views.xml',
-        'views/res_config_settings_views.xml',
+        'views/inventory_queue_config_views.xml',
     ],
     'installable': True,
     'application': False,

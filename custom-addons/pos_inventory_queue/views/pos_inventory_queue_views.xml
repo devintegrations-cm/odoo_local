@@ -139,7 +139,7 @@
     <!-- MENU                                                         -->
     <!-- ============================================================ -->
     <menuitem id="menu_pos_inventory_queue_root"
-              name="Inventory Queue"
+              name="Cola de Inventario"
               parent="point_of_sale.menu_point_of_sale"
               action="action_pos_inventory_queue"
               sequence="99" />

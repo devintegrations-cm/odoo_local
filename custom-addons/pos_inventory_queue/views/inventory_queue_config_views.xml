@@ -1,0 +1,135 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<odoo>
+
+    <!-- =========================================================
+         POS Inventory Queue - Configuration View
+         ========================================================= -->
+    <record id="pos_inventory_queue_config_view_form" model="ir.ui.view">
+        <field name="name">pos.inventory.queue.config.form</field>
+        <field name="model">pos.inventory.queue.config</field>
+        <field name="arch" type="xml">
+
+            <form string="Inventory Queue Configuration">
+
+                <sheet>
+
+                    <!-- =================================================
+                         Queue Enabled
+                         ================================================= -->
+                    <div class="oe_title">
+                        <label for="pos_inventory_queue_enabled"
+                               class="oe_edit_only"/>
+
+                        <h1>
+                            <field name="pos_inventory_queue_enabled"
+                                   widget="boolean_toggle"
+                                   nolabel="1"/>
+                        </h1>
+                    </div>
+
+
+                    <!-- =================================================
+                         Information Sections
+                         ================================================= -->
+                    <div class="row g-4 w-100 mt-3">
+
+                        <!-- Queue Configuration -->
+                        <div class="col-12 col-lg-6">
+                            <div class="border rounded p-3 h-100">
+
+                                <h4 class="mb-3">
+                                    Queue Configuration
+                                </h4>
+
+                                <p class="text-muted mb-0">
+                                    Configuración GLOBAL: no depende del
+                                    punto de venta seleccionado. Al
+                                    desactivarla, los movimientos de
+                                    inventario se procesan de forma
+                                    sincronizada (como si el módulo no
+                                    existiera) y la cola solo termina lo
+                                    pendiente.
+                                </p>
+
+                            </div>
+                        </div>
+
+
+                        <!-- Behavior When Disabled -->
+                        <div class="col-12 col-lg-6">
+                            <div class="border rounded p-3 h-100">
+
+                                <h4 class="mb-3">
+                                    Behavior When Disabled
+                                </h4>
+
+                                <ul class="text-muted mb-0 ps-3">
+                                    <li>
+                                        Pickings se validan de forma
+                                        sincronizada
+                                    </li>
+
+                                    <li>
+                                        La cola termina los items ya
+                                        pendientes
+                                    </li>
+
+                                    <li>
+                                        No se crean nuevos items en la cola
+                                    </li>
+                                </ul>
+
+                            </div>
+                        </div>
+
+                    </div>
+
+                </sheet>
+
+
+                <!-- =====================================================
+                     Footer
+                     ===================================================== -->
+                <footer>
+
+                    <button name="action_save"
+                            string="Guardar"
+                            type="object"
+                            class="btn-primary"/>
+
+                    <button string="Descartar"
+                            special="cancel"
+                            class="btn-secondary"/>
+
+                </footer>
+
+            </form>
+
+        </field>
+    </record>
+
+
+    <!-- =============================================================
+         Action
+         ============================================================= -->
+    <record id="action_pos_inventory_queue_config"
+            model="ir.actions.act_window">
+
+        <field name="name">Inventory Queue</field>
+        <field name="res_model">pos.inventory.queue.config</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+
+    </record>
+
+
+    <!-- =============================================================
+         Menu
+         ============================================================= -->
+    <menuitem id="menu_pos_inventory_queue_config"
+              name="Inventario (Queue)"
+              parent="point_of_sale.menu_point_config_product"
+              action="action_pos_inventory_queue_config"
+              sequence="50"/>
+
+</odoo>
