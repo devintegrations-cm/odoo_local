@@ -55,7 +55,7 @@ class StockPicking(models.Model):
             Queue = self.env['pos.inventory.queue']
             for picking in pickings:
                 Queue.create({'picking_id': picking.id, 'state': 'pending'})
-            self._trigger_queue_processing_after_commit()
+            self._trigger_queue_processing()
         else:
             for picking in pickings:
                 try:
@@ -67,59 +67,13 @@ class StockPicking(models.Model):
         return pickings
 
     @api.model
-    def _trigger_queue_processing_after_commit(self):
+    def _trigger_queue_processing(self):
+        """Dispara el drenaje de la cola en el worker de cron (P0-2).
+
+        Delega en el helper consolidado del modelo de cola para que el
+        encolado y el presupuesto de tiempo del propio drenaje usen el
+        mismo mecanismo (ir.cron._trigger, mejor-esfuerzo). Ver
+        pos.inventory.queue._trigger_processing para la explicacion de por
+        que _trigger es atomico con el commit de la venta.
         """
-        Dispara el procesamiento de la cola después de que la
-        transacción actual (orden + pago + picking + item) sea
-        committeada.
-
-        Un item recién encolado NO es visible para el procesador hasta
-        que su transacción termina. Por eso el procesamiento se registra
-        como hook post-commit.
-
-        En Odoo 17 el dispatcher post-commit cuelga del Cursor
-        (cr.postcommit), no de cr.transaction. Si no hubiera dispatcher
-        (scripts crudos), se cae a transaction.add; si tampoco, quien
-        ejecuta el script llama _process_queue() explícito tras su commit.
-        """
-        cr = self.env.cr
-        postcommit = getattr(cr, 'postcommit', None)
-        transaction = getattr(cr, 'transaction', None)
-
-        db_name = cr.dbname
-        uid = self.env.uid
-        context = self.env.context
-
-        def _after_commit():
-            from .queue_connection import (
-                queue_get_cursor,
-                queue_put_cursor,
-            )
-            from psycopg2.pool import PoolError
-
-            # El hook es best-effort: si el pool dedicado de la cola
-            # está lleno, se omite y el CRON drena la cola. Así 100
-            # órdenes concurrentes no compiten agresivamente por
-            # conexiones del pool de la cola.
-            try:
-                cr2, env2 = queue_get_cursor(db_name, uid, context)
-            except PoolError:
-                _logger.debug(
-                    'POS Queue: hook post-commit omitido '
-                    '(pool de cola lleno); el cron drenará la cola'
-                )
-                return
-
-            try:
-                env2['pos.inventory.queue']._process_queue()
-                # _process_queue() ya commitea el claim de cada item
-                # (para liberar su row lock); este commit cierra el
-                # cursor del hook, que es descartable.
-                cr2.commit()
-            finally:
-                queue_put_cursor(cr2)
-
-        if postcommit is not None:
-            postcommit.add(_after_commit)
-        elif transaction is not None:
-            transaction.add(_after_commit)
+        self.env['pos.inventory.queue']._trigger_processing()

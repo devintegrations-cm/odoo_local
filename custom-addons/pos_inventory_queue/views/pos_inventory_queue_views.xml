@@ -20,6 +20,7 @@
                 <field name="pos_order_id" />
                 <field name="state" />
                 <field name="retry_count" />
+                <field name="next_retry_date" optional="hide" />
                 <field name="start_date" />
                 <field name="done_date" />
                 <field name="error_date" />
@@ -40,7 +41,14 @@
                             string="Retry"
                             type="object"
                             class="btn-primary"
+                            groups="point_of_sale.group_pos_manager"
                             invisible="state not in ('failed', 'failed_permanent')" />
+                    <button name="action_trigger_processing"
+                            string="Procesar ahora"
+                            type="object"
+                            groups="point_of_sale.group_pos_manager" />
+                    <field name="state" widget="statusbar"
+                           statusbar_visible="pending,processing,done" />
                 </header>
                 <sheet>
                     <div class="oe_title">
@@ -51,8 +59,9 @@
                     <group>
                         <group string="Queue">
                             <field name="sequence" />
-                            <field name="state" />
                             <field name="retry_count" />
+                            <field name="next_retry_date"
+                                   invisible="state != 'failed'" />
                         </group>
                         <group string="References">
                             <field name="picking_id" />
@@ -87,6 +96,9 @@
                 <field name="picking_id" />
                 <field name="pos_order_id" />
                 <separator />
+                <filter name="needs_attention"
+                        string="Pendientes + Fallidos"
+                        domain="[('state', 'in', ('pending', 'processing', 'failed', 'failed_permanent'))]" />
                 <filter name="pending"
                         string="Pending"
                         domain="[('state', '=', 'pending')]" />
@@ -99,6 +111,10 @@
                 <filter name="failed"
                         string="Failed"
                         domain="[('state', 'in', ('failed', 'failed_permanent'))]" />
+                <separator />
+                <filter name="archived"
+                        string="Archived"
+                        domain="[('active', '=', False)]" />
                 <separator />
                 <group expand="0" string="Group By">
                     <filter name="group_state"
@@ -123,7 +139,7 @@
         <field name="res_model">pos.inventory.queue</field>
         <field name="view_mode">tree,form</field>
         <field name="search_view_id" ref="pos_inventory_queue_view_search" />
-        <field name="context">{'search_default_pending': 1}</field>
+        <field name="context">{'search_default_needs_attention': 1}</field>
         <field name="help" type="html">
             <p class="o_view_nocontent_smiling_face">
                 No queue items
