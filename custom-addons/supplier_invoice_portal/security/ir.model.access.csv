@@ -1,0 +1,8 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_spr_request_validator,supplier.payment.request validator,model_supplier_payment_request,group_spr_validator,1,1,1,0
+access_spr_request_manager,supplier.payment.request manager,model_supplier_payment_request,group_spr_manager,1,1,1,1
+access_spr_request_line_validator,supplier.payment.request.line validator,model_supplier_payment_request_line,group_spr_validator,1,1,1,1
+access_spr_request_line_manager,supplier.payment.request.line manager,model_supplier_payment_request_line,group_spr_manager,1,1,1,1
+access_spr_request_portal,supplier.payment.request portal,model_supplier_payment_request,base.group_portal,1,0,0,0
+access_spr_request_line_portal,supplier.payment.request.line portal,model_supplier_payment_request_line,base.group_portal,1,0,0,0
+access_spr_reject_wizard_manager,supplier.payment.request.reject manager,model_supplier_payment_request_reject,group_spr_manager,1,1,1,0

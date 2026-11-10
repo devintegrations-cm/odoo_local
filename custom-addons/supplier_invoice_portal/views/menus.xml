@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <menuitem id="menu_spr_request"
+              name="Solicitudes de pago de proveedor"
+              parent="purchase.menu_procurement_management"
+              action="action_spr_request"
+              groups="supplier_invoice_portal.group_spr_validator"
+              sequence="25"/>
+</odoo>

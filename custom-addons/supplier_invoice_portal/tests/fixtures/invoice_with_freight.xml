@@ -1,0 +1,76 @@
+<Invoice xmlns="urn:oasis:names:specification:ubl:schema:xsd:Invoice-2" xmlns:cac="urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2" xmlns:cbc="urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2">
+  <cbc:UBLVersionID>UBL 2.1</cbc:UBLVersionID>
+  <cbc:ID>SETP990000077</cbc:ID>
+  <cbc:UUID schemeID="2" schemeName="CUFE-SHA384">4ba22b915c51074ffc173838b709c3cb10ac4005a4331f0b43bf25f4e89512d9051b68fe5c85513bc4ee1a739ff2490d</cbc:UUID>
+  <cbc:IssueDate>2026-03-16</cbc:IssueDate>
+  <cbc:InvoiceTypeCode>01</cbc:InvoiceTypeCode>
+  <cbc:DocumentCurrencyCode>COP</cbc:DocumentCurrencyCode>
+  <cac:AccountingSupplierParty>
+    <cac:Party>
+      <cac:PartyTaxScheme>
+        <cbc:RegistrationName>CAFES DEL SUR SAS</cbc:RegistrationName>
+        <cbc:CompanyID schemeID="1" schemeName="31">900123456</cbc:CompanyID>
+        <cac:TaxScheme><cbc:ID>01</cbc:ID><cbc:Name>IVA</cbc:Name></cac:TaxScheme>
+      </cac:PartyTaxScheme>
+    </cac:Party>
+  </cac:AccountingSupplierParty>
+  <cac:AccountingCustomerParty>
+    <cac:Party>
+      <cac:PartyTaxScheme>
+        <cbc:RegistrationName>LIBERTARIO COFFEE ROASTERS SAS</cbc:RegistrationName>
+        <cbc:CompanyID schemeID="8" schemeName="31">901234567</cbc:CompanyID>
+        <cac:TaxScheme><cbc:ID>01</cbc:ID><cbc:Name>IVA</cbc:Name></cac:TaxScheme>
+      </cac:PartyTaxScheme>
+    </cac:Party>
+  </cac:AccountingCustomerParty>
+  <cac:AllowanceCharge>
+    <cbc:ID>1</cbc:ID>
+    <cbc:ChargeIndicator>true</cbc:ChargeIndicator>
+    <cbc:AllowanceChargeReason>Manejo y cargue</cbc:AllowanceChargeReason>
+    <cbc:Amount currencyID="COP">20000.00</cbc:Amount>
+  </cac:AllowanceCharge>
+  <cac:TaxTotal>
+    <cbc:TaxAmount currencyID="COP">228000.00</cbc:TaxAmount>
+  </cac:TaxTotal>
+  <cac:LegalMonetaryTotal>
+    <cbc:LineExtensionAmount currencyID="COP">1280000.00</cbc:LineExtensionAmount>
+    <cbc:TaxExclusiveAmount currencyID="COP">1280000.00</cbc:TaxExclusiveAmount>
+    <cbc:TaxInclusiveAmount currencyID="COP">1508000.00</cbc:TaxInclusiveAmount>
+    <cbc:ChargeTotalAmount currencyID="COP">20000.00</cbc:ChargeTotalAmount>
+    <cbc:PayableAmount currencyID="COP">1528000.00</cbc:PayableAmount>
+  </cac:LegalMonetaryTotal>
+  <cac:InvoiceLine>
+    <cbc:ID>1</cbc:ID>
+    <cbc:InvoicedQuantity unitCode="KGM">100.00</cbc:InvoicedQuantity>
+    <cbc:LineExtensionAmount currencyID="COP">1200000.00</cbc:LineExtensionAmount>
+    <cac:TaxTotal>
+      <cbc:TaxAmount currencyID="COP">228000.00</cbc:TaxAmount>
+      <cac:TaxSubtotal>
+        <cbc:TaxableAmount currencyID="COP">1200000.00</cbc:TaxableAmount>
+        <cbc:TaxAmount currencyID="COP">228000.00</cbc:TaxAmount>
+        <cac:TaxCategory>
+          <cbc:Percent>19.00</cbc:Percent>
+          <cac:TaxScheme><cbc:ID>01</cbc:ID><cbc:Name>IVA</cbc:Name></cac:TaxScheme>
+        </cac:TaxCategory>
+      </cac:TaxSubtotal>
+    </cac:TaxTotal>
+    <cac:Item>
+      <cbc:Description>Cafe verde excelso saco 70kg</cbc:Description>
+      <cac:SellersItemIdentification><cbc:ID>CAFE-001</cbc:ID></cac:SellersItemIdentification>
+    </cac:Item>
+    <cac:Price>
+      <cbc:PriceAmount currencyID="COP">12000.00</cbc:PriceAmount>
+    </cac:Price>
+  </cac:InvoiceLine>
+  <cac:InvoiceLine>
+    <cbc:ID>2</cbc:ID>
+    <cbc:InvoicedQuantity unitCode="KGM">1.00</cbc:InvoicedQuantity>
+    <cbc:LineExtensionAmount currencyID="COP">80000.00</cbc:LineExtensionAmount>
+    <cac:Item>
+      <cbc:Description>Flete Medellin - Bogota</cbc:Description>
+    </cac:Item>
+    <cac:Price>
+      <cbc:PriceAmount currencyID="COP">80000.00</cbc:PriceAmount>
+    </cac:Price>
+  </cac:InvoiceLine>
+</Invoice>

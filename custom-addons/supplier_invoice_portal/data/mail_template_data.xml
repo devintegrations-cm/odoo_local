@@ -1,0 +1,185 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo noupdate="1">
+
+    <!-- Correos al proveedor. Se envian con message_post_with_source, asi que
+         quedan tambien en el chatter de la solicitud. -->
+
+    <record id="mail_template_spr_received" model="mail.template">
+        <field name="name">Solicitud de pago: recibida</field>
+        <field name="model_id" ref="model_supplier_payment_request"/>
+        <field name="subject">{{ object.company_id.name }}: recibimos su factura {{ object.invoice_ref or object.name }}</field>
+        <field name="email_from">{{ (object.company_id.email_formatted or user.email_formatted) }}</field>
+        <field name="partner_to">{{ object.partner_id.id }}</field>
+        <field name="lang">{{ object.partner_id.lang }}</field>
+        <field name="auto_delete" eval="True"/>
+        <field name="body_html" type="html">
+<div style="margin: 0px; padding: 0px; font-size: 13px;">
+    <p>Estimado proveedor <t t-out="object.partner_id.name"/>,</p>
+    <p>
+        Recibimos su solicitud de pago <strong t-out="object.name"/>
+        por la factura <strong t-out="object.invoice_ref or 'sin numero'"/>
+        <t t-if="object.purchase_names">, asociada a <t t-out="object.purchase_names"/></t>.
+    </p>
+    <p t-if="object.document_type == 'debit_note'">
+        Por tratarse de una nota debito, contabilidad debe revisarla y aceptarla antes de registrarla.
+    </p>
+    <p t-if="object.state == 'approved'">
+        La factura paso las validaciones automaticas y quedo en cola para revision de contabilidad.
+    </p>
+    <p t-if="object.state == 'warning'">
+        La factura quedo <strong>con observaciones</strong>. Contabilidad la revisara y le avisaremos si hay que corregir algo:
+    </p>
+    <ul t-if="object.state == 'warning'">
+        <li t-foreach="object._portal_findings()" t-as="finding" t-out="finding['message_es']"/>
+    </ul>
+    <p>
+        Puede seguir el estado en
+        <a t-attf-href="{{ object.get_base_url() }}{{ object.get_portal_url() }}">su portal de proveedor</a>.
+    </p>
+    <p>Gracias,<br/><t t-out="object.company_id.name"/></p>
+</div>
+        </field>
+    </record>
+
+    <record id="mail_template_spr_auto_rejected" model="mail.template">
+        <field name="name">Solicitud de pago: no paso las validaciones</field>
+        <field name="model_id" ref="model_supplier_payment_request"/>
+        <field name="subject">{{ object.company_id.name }}: su factura {{ object.invoice_ref or object.name }} requiere correccion</field>
+        <field name="email_from">{{ (object.company_id.email_formatted or user.email_formatted) }}</field>
+        <field name="partner_to">{{ object.partner_id.id }}</field>
+        <field name="lang">{{ object.partner_id.lang }}</field>
+        <field name="auto_delete" eval="True"/>
+        <field name="body_html" type="html">
+<div style="margin: 0px; padding: 0px; font-size: 13px;">
+    <p>Estimado proveedor <t t-out="object.partner_id.name"/>,</p>
+    <p>
+        Su solicitud de pago <strong t-out="object.name"/>
+        por la factura <strong t-out="object.invoice_ref or 'sin numero'"/>
+        <strong>no paso las validaciones automaticas</strong>:
+    </p>
+    <ul>
+        <li t-foreach="object._portal_findings()" t-as="finding">
+            <t t-if="finding['level'] == 'error'"><strong>Error:</strong></t>
+            <t t-else=""><strong>Observacion:</strong></t>
+            <t t-out="finding['message_es']"/>
+        </li>
+    </ul>
+    <p>
+        Por favor revise los puntos marcados como error y radique una nueva solicitud desde
+        <a t-attf-href="{{ object.get_base_url() }}/my/payment-requests/new">su portal de proveedor</a>.
+        Si considera que la factura es correcta, responda este correo.
+    </p>
+    <p>Gracias,<br/><t t-out="object.company_id.name"/></p>
+</div>
+        </field>
+    </record>
+
+    <record id="mail_template_spr_rejected" model="mail.template">
+        <field name="name">Solicitud de pago: rechazada por contabilidad</field>
+        <field name="model_id" ref="model_supplier_payment_request"/>
+        <field name="subject">{{ object.company_id.name }}: su factura {{ object.invoice_ref or object.name }} fue rechazada</field>
+        <field name="email_from">{{ (object.company_id.email_formatted or user.email_formatted) }}</field>
+        <field name="partner_to">{{ object.partner_id.id }}</field>
+        <field name="lang">{{ object.partner_id.lang }}</field>
+        <field name="auto_delete" eval="True"/>
+        <field name="body_html" type="html">
+<div style="margin: 0px; padding: 0px; font-size: 13px;">
+    <p>Estimado proveedor <t t-out="object.partner_id.name"/>,</p>
+    <p>
+        Su solicitud de pago <strong t-out="object.name"/>
+        por la factura <strong t-out="object.invoice_ref or 'sin numero'"/>
+        fue <strong>rechazada</strong> por el siguiente motivo:
+    </p>
+    <blockquote style="border-left: 3px solid #ccc; padding-left: 10px;" t-out="object.rejection_reason"/>
+    <p>
+        Si corrige la factura, puede radicar una nueva solicitud desde
+        <a t-attf-href="{{ object.get_base_url() }}/my/payment-requests/new">su portal de proveedor</a>.
+    </p>
+    <p>Gracias,<br/><t t-out="object.company_id.name"/></p>
+</div>
+        </field>
+    </record>
+
+    <record id="mail_template_spr_invoiced" model="mail.template">
+        <field name="name">Solicitud de pago: factura registrada</field>
+        <field name="model_id" ref="model_supplier_payment_request"/>
+        <field name="subject">{{ object.company_id.name }}: su factura {{ object.invoice_ref or object.name }} fue registrada</field>
+        <field name="email_from">{{ (object.company_id.email_formatted or user.email_formatted) }}</field>
+        <field name="partner_to">{{ object.partner_id.id }}</field>
+        <field name="lang">{{ object.partner_id.lang }}</field>
+        <field name="auto_delete" eval="True"/>
+        <field name="body_html" type="html">
+<div style="margin: 0px; padding: 0px; font-size: 13px;">
+    <p>Estimado proveedor <t t-out="object.partner_id.name"/>,</p>
+    <p>
+        Su factura <strong t-out="object.invoice_ref or object.name"/>
+        por <strong t-out="object.amount_total" t-options='{"widget": "monetary", "display_currency": object.currency_id}'/>
+        fue aceptada y registrada en nuestra contabilidad. El pago se programara segun las
+        condiciones acordadas.
+    </p>
+    <p>
+        Puede consultar el detalle en
+        <a t-attf-href="{{ object.get_base_url() }}{{ object.get_portal_url() }}">su portal de proveedor</a>.
+    </p>
+    <p>Gracias,<br/><t t-out="object.company_id.name"/></p>
+</div>
+        </field>
+    </record>
+
+    <!-- Instructivo para el proveedor. Se envia desde el contacto con el boton
+         "Enviar instructivo del portal", que abre el asistente de correo para
+         revisar destinatarios. El instructivo en PDF va como reporte y el
+         asistente lo muestra ya adjunto (DECISIONS.md #52). -->
+    <record id="mail_template_spr_instructions" model="mail.template">
+        <field name="name">Portal de facturas: instructivo para el proveedor</field>
+        <field name="model_id" ref="base.model_res_partner"/>
+        <field name="subject">{{ user.company_id.name }}: como radicar sus facturas en nuestro portal de proveedores</field>
+        <field name="email_from">{{ (user.company_id.email_formatted or user.email_formatted) }}</field>
+        <field name="partner_to">{{ object.id }}</field>
+        <field name="lang">{{ object.lang }}</field>
+        <field name="auto_delete" eval="True"/>
+        <field name="report_template_ids" eval="[(6, 0, [ref('supplier_invoice_portal.report_spr_instructions')])]"/>
+        <field name="body_html" type="html">
+<div style="margin: 0px; padding: 0px; font-size: 13px;">
+    <p>Estimado proveedor <t t-out="object.name"/>,</p>
+    <p>
+        Desde ahora sus facturas a <t t-out="user.company_id.name"/> se radican en nuestro portal de
+        proveedores. Asi puede ver en todo momento si su factura fue recibida, si tiene observaciones y
+        cuando queda registrada para pago.
+    </p>
+    <h3 style="font-size: 15px;">1. Ingrese al portal</h3>
+    <p>
+        Entre a <a t-attf-href="{{ object.get_base_url() }}/my/payment-requests">
+        <t t-out="object.get_base_url()"/>/my/payment-requests</a>. Si es la primera vez, use el enlace
+        de invitacion que le llego por correo para crear su contrasena. Cada persona de su empresa que
+        radique debe tener su propio usuario; pidalo al area de compras.
+    </p>
+    <h3 style="font-size: 15px;">2. Radique cada documento</h3>
+    <ul>
+        <li><strong>Factura electronica:</strong> marque la orden u ordenes de compra que factura (puede
+            agrupar varias remisiones en una sola factura), adjunte el PDF y el XML que le entrega la DIAN.
+            Con el XML no tiene que digitar nada.</li>
+        <li><strong>Nota credito o nota debito:</strong> elija la factura que corrige y adjunte el PDF y el
+            XML de la nota. Las notas debito (por ejemplo, un ajuste de precio) las revisa y acepta
+            contabilidad antes de registrarlas.</li>
+        <li t-if="object.spr_support_document"><strong>Cuenta de cobro:</strong> como usted no esta
+            obligado a facturar, adjunte su cuenta de cobro en PDF y digite numero, fecha y valor total.
+            Nosotros emitimos el documento soporte.</li>
+        <li><strong>Fletes o envios:</strong> si la factura cobra un envio que no esta en la orden de
+            compra, describalo como flete, envio o domicilio en una linea aparte.</li>
+    </ul>
+    <h3 style="font-size: 15px;">3. Tenga en cuenta</h3>
+    <ul>
+        <li>La factura debe estar a nombre de <t t-out="user.company_id.name"/> y emitida con su NIT.</li>
+        <li>El <strong>ultimo dia habil de cada mes</strong> se reciben documentos hasta las
+            <t t-out="object._spr_cutoff_label()"/> Despues de esa hora, radique desde el primer dia del
+            mes siguiente.</li>
+        <li>Si algo no pasa las validaciones, el portal le dice que corregir y le avisamos por correo.</li>
+    </ul>
+    <p>Cualquier duda, responda este correo o comuniquese con el area de compras.</p>
+    <p>Cordialmente,<br/><t t-out="user.company_id.name"/></p>
+</div>
+        </field>
+    </record>
+
+</odoo>

@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="view_spr_reject_wizard_form" model="ir.ui.view">
+        <field name="name">supplier.payment.request.reject.form</field>
+        <field name="model">supplier.payment.request.reject</field>
+        <field name="arch" type="xml">
+            <form string="Rechazar solicitud">
+                <p>El proveedor vera este motivo. Sea concreto: que debe corregir para reenviar.</p>
+                <group>
+                    <field name="request_id" readonly="1"/>
+                    <field name="reason" placeholder="Ej.: El NIT del adquiriente no corresponde a la compania."/>
+                </group>
+                <footer>
+                    <button name="action_confirm" type="object" string="Rechazar" class="btn-danger"/>
+                    <button string="Cancelar" special="cancel" class="btn-secondary"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+</odoo>

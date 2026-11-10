@@ -1,0 +1,155 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="res_config_settings_view_form_spr" model="ir.ui.view">
+        <field name="name">res.config.settings.view.form.inherit.spr</field>
+        <field name="model">res.config.settings</field>
+        <field name="inherit_id" ref="purchase.res_config_settings_view_form_purchase"/>
+        <field name="arch" type="xml">
+            <xpath expr="//app[@name='purchase']" position="inside">
+                <block title="Portal de facturas de proveedor" name="spr_settings">
+                    <setting string="Diario por defecto"
+                             help="Diario de compras con el que se crean las facturas borrador.">
+                        <field name="spr_default_journal_id" options="{'no_create': True}"/>
+                    </setting>
+                    <setting string="Tolerancia de montos"
+                             help="Se acepta la diferencia si esta dentro del porcentaje O dentro del monto absoluto.">
+                        <div class="content-group">
+                            <div class="row">
+                                <label for="spr_amount_tolerance_pct" class="col-lg-4 o_light_label"/>
+                                <field name="spr_amount_tolerance_pct"/>
+                            </div>
+                            <div class="row">
+                                <label for="spr_amount_tolerance_abs" class="col-lg-4 o_light_label"/>
+                                <field name="spr_amount_tolerance_abs"/>
+                            </div>
+                        </div>
+                    </setting>
+                    <setting string="Diario de documento soporte"
+                             help="Diario con la resolucion DIAN de documento soporte, para las cuentas de cobro de proveedores no obligados a facturar.">
+                        <field name="spr_support_journal_id" options="{'no_create': True}"/>
+                    </setting>
+                    <setting string="Producto de flete"
+                             help="Con el se registran los fletes y cargos de envio que la factura cobra y la orden de compra no tiene.">
+                        <field name="spr_freight_product_id" options="{'no_create': True}"/>
+                    </setting>
+                    <setting string="IVA como producto"
+                             help="Las lineas van con impuesto 0 % y el IVA total de la factura entra como una linea del producto de mayor valor IVA, que se agrega a la orden de compra si no la tiene.">
+                        <field name="spr_tax_as_product"/>
+                        <div class="content-group mt16" invisible="not spr_tax_as_product">
+                            <div class="row">
+                                <label for="spr_tax_product_id" class="col-lg-4 o_light_label"/>
+                                <field name="spr_tax_product_id" options="{'no_create': True}"
+                                       required="spr_tax_as_product"/>
+                            </div>
+                            <div class="row">
+                                <label for="spr_exempt_tax_id" class="col-lg-4 o_light_label"/>
+                                <field name="spr_exempt_tax_id" options="{'no_create': True}"
+                                       required="spr_tax_as_product"/>
+                            </div>
+                        </div>
+                    </setting>
+                    <setting string="Cierre de radicacion de fin de mes"
+                             help="El ultimo dia habil del mes, desde la hora de corte, el portal no recibe facturas hasta el mes siguiente. Tiene en cuenta los festivos de Colombia.">
+                        <field name="spr_cutoff_enabled"/>
+                        <div class="content-group mt16" invisible="not spr_cutoff_enabled">
+                            <div class="row">
+                                <label for="spr_cutoff_hour" class="col-lg-4 o_light_label"/>
+                                <field name="spr_cutoff_hour" widget="float_time"/>
+                            </div>
+                        </div>
+                    </setting>
+                    <setting string="NIT de la compania"
+                             help="Se compara contra el adquiriente de la factura. Vacio = NIT de la compania activa.">
+                        <field name="spr_company_nit" placeholder="900123456"/>
+                    </setting>
+                    <setting string="Verificar emisor y receptor"
+                             help="Compara NIT y razon social del emisor y del adquiriente con el proveedor y la compania. Desactivado, esas reglas no corren y los campos se ocultan en la solicitud.">
+                        <field name="spr_party_check"/>
+                    </setting>
+                    <setting string="Grupo validador"
+                             help="Recibe las actividades de las solicitudes aprobadas o con observaciones.">
+                        <field name="spr_validator_group_id" options="{'no_create': True}"/>
+                    </setting>
+                    <setting string="Verificar el CUFE en el catalogo DIAN"
+                             help="Si el catalogo no responde, la solicitud sigue su curso con una observacion.">
+                        <field name="spr_dian_cufe_check"/>
+                        <div class="content-group mt16" invisible="not spr_dian_cufe_check">
+                            <field name="spr_dian_catalog_url" class="w-100"/>
+                        </div>
+                    </setting>
+                    <setting string="Habilitar OCR del PDF"
+                             help="Solo se usa cuando el proveedor no adjunta el XML DIAN.">
+                        <field name="spr_ocr_enabled"/>
+                        <div class="content-group mt16" invisible="not spr_ocr_enabled">
+                            <div class="row">
+                                <label for="spr_ocr_url" class="col-lg-4 o_light_label"/>
+                                <field name="spr_ocr_url" placeholder="https://.../ocr"/>
+                            </div>
+                            <div class="row">
+                                <label for="spr_ocr_api_key" class="col-lg-4 o_light_label"/>
+                                <field name="spr_ocr_api_key" password="True"/>
+                            </div>
+                            <div class="row">
+                                <label for="spr_ocr_timeout" class="col-lg-4 o_light_label"/>
+                                <field name="spr_ocr_timeout"/>
+                            </div>
+                        </div>
+                    </setting>
+                    <setting string="Emparejamiento por IA"
+                             help="Solo sugiere el emparejamiento de lineas. Nunca crea ni modifica registros.">
+                        <field name="spr_ai_enabled"/>
+                        <div class="content-group mt16" invisible="not spr_ai_enabled">
+                            <div class="row">
+                                <label for="spr_ai_provider" class="col-lg-4 o_light_label"/>
+                                <field name="spr_ai_provider"/>
+                            </div>
+                            <div class="row" invisible="spr_ai_provider != 'http'">
+                                <label for="spr_ai_url" class="col-lg-4 o_light_label"/>
+                                <field name="spr_ai_url" placeholder="https://.../match-lines"/>
+                            </div>
+                            <div class="row" invisible="spr_ai_cli_enabled">
+                                <label for="spr_ai_api_key" class="col-lg-4 o_light_label"/>
+                                <field name="spr_ai_api_key" password="True"/>
+                            </div>
+                            <div class="row" invisible="spr_ai_provider != 'anthropic' or spr_ai_cli_enabled">
+                                <label for="spr_ai_model" class="col-lg-4 o_light_label"/>
+                                <field name="spr_ai_model"/>
+                            </div>
+                            <div class="row" invisible="spr_ai_cli_enabled">
+                                <label for="spr_ai_timeout" class="col-lg-4 o_light_label"/>
+                                <field name="spr_ai_timeout"/>
+                            </div>
+                        </div>
+                    </setting>
+                    <setting string="Conexion de prueba por CLI local"
+                             help="Llama al puente local anthropic_cli_bridge, que ejecuta una CLI de IA (claude, agy o codex) con su sesion iniciada, en vez de la API de Anthropic. Solo para desarrollo. Mientras este activa, el proveedor y la API key de arriba no se usan."
+                             invisible="not spr_ai_enabled">
+                        <field name="spr_ai_cli_enabled"/>
+                        <div class="content-group mt16" invisible="not spr_ai_cli_enabled">
+                            <div class="row">
+                                <label for="spr_ai_cli_tool" class="col-lg-4 o_light_label"/>
+                                <field name="spr_ai_cli_tool"/>
+                            </div>
+                            <div class="row">
+                                <label for="spr_ai_cli_url" class="col-lg-4 o_light_label"/>
+                                <field name="spr_ai_cli_url" placeholder="http://host.docker.internal:8787/v1/messages"/>
+                            </div>
+                            <div class="row">
+                                <label for="spr_ai_cli_api_key" class="col-lg-4 o_light_label"/>
+                                <field name="spr_ai_cli_api_key" password="True"/>
+                            </div>
+                            <div class="row">
+                                <label for="spr_ai_cli_timeout" class="col-lg-4 o_light_label"/>
+                                <field name="spr_ai_cli_timeout"/>
+                            </div>
+                            <div class="mt8">
+                                <button name="action_spr_ai_cli_test" type="object"
+                                        string="Probar conexion" class="btn-link" icon="fa-plug"/>
+                            </div>
+                        </div>
+                    </setting>
+                </block>
+            </xpath>
+        </field>
+    </record>
+</odoo>

@@ -1,0 +1,71 @@
+<CreditNote xmlns="urn:oasis:names:specification:ubl:schema:xsd:CreditNote-2" xmlns:cac="urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2" xmlns:cbc="urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2">
+  <cbc:UBLVersionID>UBL 2.1</cbc:UBLVersionID>
+  <cbc:CustomizationID>20</cbc:CustomizationID>
+  <cbc:ID>NC-000045</cbc:ID>
+  <cbc:UUID schemeID="2" schemeName="CUDE-SHA384">b41592047be134874ca51a9ed8174760b31f1bcba45d2b8e7d7b0c55719196fcac79fc7aa580d9a2e64e612afa779ff0</cbc:UUID>
+  <cbc:IssueDate>2026-03-20</cbc:IssueDate>
+  <cbc:CreditNoteTypeCode>91</cbc:CreditNoteTypeCode>
+  <cbc:DocumentCurrencyCode>COP</cbc:DocumentCurrencyCode>
+  <cac:DiscrepancyResponse>
+    <cbc:ReferenceID>SETP990000001</cbc:ReferenceID>
+    <cbc:ResponseCode>1</cbc:ResponseCode>
+    <cbc:Description>Devolucion parcial de cafe</cbc:Description>
+  </cac:DiscrepancyResponse>
+  <cac:BillingReference>
+    <cac:InvoiceDocumentReference>
+      <cbc:ID>SETP990000001</cbc:ID>
+      <cbc:UUID schemeName="CUFE-SHA384">5b7ed1473378afeccda8a02a8f84e8bc00b6926f9a48720e9bfa7d1a2bb1c9243a510d94519f045a6afa7d7358c3eda3</cbc:UUID>
+      <cbc:IssueDate>2026-03-15</cbc:IssueDate>
+    </cac:InvoiceDocumentReference>
+  </cac:BillingReference>
+  <cac:AccountingSupplierParty>
+    <cac:Party>
+      <cac:PartyTaxScheme>
+        <cbc:RegistrationName>CAFES DEL SUR SAS</cbc:RegistrationName>
+        <cbc:CompanyID schemeID="1" schemeName="31">900123456</cbc:CompanyID>
+        <cac:TaxScheme><cbc:ID>01</cbc:ID><cbc:Name>IVA</cbc:Name></cac:TaxScheme>
+      </cac:PartyTaxScheme>
+    </cac:Party>
+  </cac:AccountingSupplierParty>
+  <cac:AccountingCustomerParty>
+    <cac:Party>
+      <cac:PartyTaxScheme>
+        <cbc:RegistrationName>LIBERTARIO COFFEE ROASTERS SAS</cbc:RegistrationName>
+        <cbc:CompanyID schemeID="8" schemeName="31">901234567</cbc:CompanyID>
+        <cac:TaxScheme><cbc:ID>01</cbc:ID><cbc:Name>IVA</cbc:Name></cac:TaxScheme>
+      </cac:PartyTaxScheme>
+    </cac:Party>
+  </cac:AccountingCustomerParty>
+  <cac:TaxTotal>
+    <cbc:TaxAmount currencyID="COP">22800.00</cbc:TaxAmount>
+  </cac:TaxTotal>
+  <cac:LegalMonetaryTotal>
+    <cbc:LineExtensionAmount currencyID="COP">120000.00</cbc:LineExtensionAmount>
+    <cbc:TaxExclusiveAmount currencyID="COP">120000.00</cbc:TaxExclusiveAmount>
+    <cbc:TaxInclusiveAmount currencyID="COP">142800.00</cbc:TaxInclusiveAmount>
+    <cbc:PayableAmount currencyID="COP">142800.00</cbc:PayableAmount>
+  </cac:LegalMonetaryTotal>
+  <cac:CreditNoteLine>
+    <cbc:ID>1</cbc:ID>
+    <cbc:CreditedQuantity unitCode="KGM">10.00</cbc:CreditedQuantity>
+    <cbc:LineExtensionAmount currencyID="COP">120000.00</cbc:LineExtensionAmount>
+    <cac:TaxTotal>
+      <cbc:TaxAmount currencyID="COP">22800.00</cbc:TaxAmount>
+      <cac:TaxSubtotal>
+        <cbc:TaxableAmount currencyID="COP">120000.00</cbc:TaxableAmount>
+        <cbc:TaxAmount currencyID="COP">22800.00</cbc:TaxAmount>
+        <cac:TaxCategory>
+          <cbc:Percent>19.00</cbc:Percent>
+          <cac:TaxScheme><cbc:ID>01</cbc:ID><cbc:Name>IVA</cbc:Name></cac:TaxScheme>
+        </cac:TaxCategory>
+      </cac:TaxSubtotal>
+    </cac:TaxTotal>
+    <cac:Item>
+      <cbc:Description>Devolucion cafe verde excelso</cbc:Description>
+      <cac:SellersItemIdentification><cbc:ID>CAFE-001</cbc:ID></cac:SellersItemIdentification>
+    </cac:Item>
+    <cac:Price>
+      <cbc:PriceAmount currencyID="COP">12000.00</cbc:PriceAmount>
+    </cac:Price>
+  </cac:CreditNoteLine>
+</CreditNote>

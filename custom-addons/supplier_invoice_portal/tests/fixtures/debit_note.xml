@@ -1,0 +1,70 @@
+<DebitNote xmlns="urn:oasis:names:specification:ubl:schema:xsd:DebitNote-2" xmlns:cac="urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2" xmlns:cbc="urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2">
+  <cbc:UBLVersionID>UBL 2.1</cbc:UBLVersionID>
+  <cbc:CustomizationID>30</cbc:CustomizationID>
+  <cbc:ID>ND-000012</cbc:ID>
+  <cbc:UUID schemeID="2" schemeName="CUDE-SHA384">4a2635df11a4fc99813f8199bcfb801af3c94cf504636d5be4f9b5655b118e8ffd6ffb75d5da6c573b6dd6714227f5a8</cbc:UUID>
+  <cbc:IssueDate>2026-03-22</cbc:IssueDate>
+  <cbc:DocumentCurrencyCode>COP</cbc:DocumentCurrencyCode>
+  <cac:DiscrepancyResponse>
+    <cbc:ReferenceID>SETP990000001</cbc:ReferenceID>
+    <cbc:ResponseCode>3</cbc:ResponseCode>
+    <cbc:Description>Ajuste de precio del cafe</cbc:Description>
+  </cac:DiscrepancyResponse>
+  <cac:BillingReference>
+    <cac:InvoiceDocumentReference>
+      <cbc:ID>SETP990000001</cbc:ID>
+      <cbc:UUID schemeName="CUFE-SHA384">5b7ed1473378afeccda8a02a8f84e8bc00b6926f9a48720e9bfa7d1a2bb1c9243a510d94519f045a6afa7d7358c3eda3</cbc:UUID>
+      <cbc:IssueDate>2026-03-15</cbc:IssueDate>
+    </cac:InvoiceDocumentReference>
+  </cac:BillingReference>
+  <cac:AccountingSupplierParty>
+    <cac:Party>
+      <cac:PartyTaxScheme>
+        <cbc:RegistrationName>CAFES DEL SUR SAS</cbc:RegistrationName>
+        <cbc:CompanyID schemeID="1" schemeName="31">900123456</cbc:CompanyID>
+        <cac:TaxScheme><cbc:ID>01</cbc:ID><cbc:Name>IVA</cbc:Name></cac:TaxScheme>
+      </cac:PartyTaxScheme>
+    </cac:Party>
+  </cac:AccountingSupplierParty>
+  <cac:AccountingCustomerParty>
+    <cac:Party>
+      <cac:PartyTaxScheme>
+        <cbc:RegistrationName>LIBERTARIO COFFEE ROASTERS SAS</cbc:RegistrationName>
+        <cbc:CompanyID schemeID="8" schemeName="31">901234567</cbc:CompanyID>
+        <cac:TaxScheme><cbc:ID>01</cbc:ID><cbc:Name>IVA</cbc:Name></cac:TaxScheme>
+      </cac:PartyTaxScheme>
+    </cac:Party>
+  </cac:AccountingCustomerParty>
+  <cac:TaxTotal>
+    <cbc:TaxAmount currencyID="COP">9500.00</cbc:TaxAmount>
+  </cac:TaxTotal>
+  <cac:RequestedMonetaryTotal>
+    <cbc:LineExtensionAmount currencyID="COP">50000.00</cbc:LineExtensionAmount>
+    <cbc:TaxExclusiveAmount currencyID="COP">50000.00</cbc:TaxExclusiveAmount>
+    <cbc:TaxInclusiveAmount currencyID="COP">59500.00</cbc:TaxInclusiveAmount>
+    <cbc:PayableAmount currencyID="COP">59500.00</cbc:PayableAmount>
+  </cac:RequestedMonetaryTotal>
+  <cac:DebitNoteLine>
+    <cbc:ID>1</cbc:ID>
+    <cbc:DebitedQuantity unitCode="KGM">100.00</cbc:DebitedQuantity>
+    <cbc:LineExtensionAmount currencyID="COP">50000.00</cbc:LineExtensionAmount>
+    <cac:TaxTotal>
+      <cbc:TaxAmount currencyID="COP">9500.00</cbc:TaxAmount>
+      <cac:TaxSubtotal>
+        <cbc:TaxableAmount currencyID="COP">50000.00</cbc:TaxableAmount>
+        <cbc:TaxAmount currencyID="COP">9500.00</cbc:TaxAmount>
+        <cac:TaxCategory>
+          <cbc:Percent>19.00</cbc:Percent>
+          <cac:TaxScheme><cbc:ID>01</cbc:ID><cbc:Name>IVA</cbc:Name></cac:TaxScheme>
+        </cac:TaxCategory>
+      </cac:TaxSubtotal>
+    </cac:TaxTotal>
+    <cac:Item>
+      <cbc:Description>Ajuste precio cafe verde excelso</cbc:Description>
+      <cac:SellersItemIdentification><cbc:ID>CAFE-001</cbc:ID></cac:SellersItemIdentification>
+    </cac:Item>
+    <cac:Price>
+      <cbc:PriceAmount currencyID="COP">500.00</cbc:PriceAmount>
+    </cac:Price>
+  </cac:DebitNoteLine>
+</DebitNote>

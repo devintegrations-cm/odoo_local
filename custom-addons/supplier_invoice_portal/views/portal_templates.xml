@@ -1,0 +1,478 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- Breadcrumbs -->
+    <template id="portal_my_home_menu_spr" name="Portal: migas solicitudes de pago"
+              inherit_id="portal.portal_breadcrumbs" priority="30">
+        <xpath expr="//ol[hasclass('o_portal_submenu')]" position="inside">
+            <li t-if="page_name in ('payment_request', 'payment_request_new')"
+                t-attf-class="breadcrumb-item #{'active ' if not record and page_name == 'payment_request' else ''}">
+                <a t-if="record or page_name == 'payment_request_new'" href="/my/payment-requests">Facturas radicadas</a>
+                <t t-else="">Facturas radicadas</t>
+            </li>
+            <li t-if="record" class="breadcrumb-item active">
+                <t t-esc="record.name"/>
+            </li>
+            <li t-if="page_name == 'payment_request_new'" class="breadcrumb-item active">
+                Radicar factura
+            </li>
+        </xpath>
+    </template>
+
+    <!-- Entrada en /my -->
+    <template id="portal_my_home_spr" name="Portal: acceso a facturas radicadas"
+              customize_show="True" inherit_id="portal.portal_my_home" priority="30">
+        <xpath expr="//div[hasclass('o_portal_docs')]" position="before">
+            <t t-set="portal_vendor_category_enable" t-value="True"/>
+        </xpath>
+        <div id="portal_vendor_category" position="inside">
+            <!-- config_card: en Odoo 17 la tarjeta nace con d-none y el JS solo la
+                 muestra si el contador es mayor que cero; un proveedor que nunca ha
+                 radicado no la veria. Solo para proveedores habilitados. -->
+            <t t-if="request.env.user.partner_id.commercial_partner_id.sudo().portal_invoice_enabled"
+               t-call="portal.portal_docs_entry">
+                <t t-set="config_card" t-value="True"/>
+                <t t-set="icon" t-value="'/supplier_invoice_portal/static/src/img/invoice.svg'"/>
+                <t t-set="text">Radique aqui sus facturas, notas y cuentas de cobro, y siga su estado</t>
+                <t t-set="title">Radicar facturas</t>
+                <t t-set="url" t-value="'/my/payment-requests'"/>
+                <t t-set="placeholder_count" t-value="'spr_count'"/>
+            </t>
+        </div>
+    </template>
+
+    <!-- Proveedor sin habilitar -->
+    <template id="portal_spr_not_enabled" name="Portal: proveedor no habilitado">
+        <t t-call="portal.portal_layout">
+            <div class="alert alert-warning mt-3" role="alert">
+                <h5 class="alert-heading">Su empresa no esta habilitada para radicar facturas</h5>
+                <p class="mb-0">
+                    Comuniquese con el area de compras para que activen su acceso al portal de facturas.
+                </p>
+            </div>
+        </t>
+    </template>
+
+    <!-- Estado como insignia -->
+    <template id="portal_spr_state_badge" name="Portal: insignia de estado">
+        <span t-attf-class="badge rounded-pill #{state_badge.get(record.state, 'text-bg-secondary')}"
+              t-esc="state_labels.get(record.state, record.state)"/>
+    </template>
+
+    <!-- Lista -->
+    <template id="portal_my_payment_requests" name="Portal: mis facturas radicadas">
+        <t t-call="portal.portal_layout">
+            <t t-set="breadcrumbs_searchbar" t-value="True"/>
+            <t t-call="portal.portal_searchbar">
+                <t t-set="title">Facturas radicadas</t>
+            </t>
+
+            <div class="d-flex justify-content-end mb-3">
+                <a href="/my/payment-requests/new" class="btn btn-primary">
+                    <i class="fa fa-plus me-1"/> Radicar factura
+                </a>
+            </div>
+
+            <t t-if="not requests">
+                <p class="alert alert-info">
+                    Todavia no ha radicado ninguna factura.
+                    <a href="/my/payment-requests/new">Radique la primera</a>.
+                </p>
+            </t>
+            <t t-if="requests" t-call="portal.portal_table">
+                <thead>
+                    <tr class="active">
+                        <th>Solicitud</th>
+                        <th>Documento</th>
+                        <th class="d-none d-md-table-cell">Orden de compra</th>
+                        <th class="d-none d-md-table-cell">Radicada</th>
+                        <th class="text-end">Total</th>
+                        <th class="text-center">Estado</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <t t-foreach="requests" t-as="record">
+                        <tr>
+                            <td><a t-att-href="record.get_portal_url()"><t t-esc="record.name"/></a></td>
+                            <td>
+                                <t t-esc="record.invoice_ref or '-'"/>
+                                <small t-if="record.document_type != 'invoice'" class="text-muted d-block"
+                                       t-esc="document_labels.get(record.document_type)"/>
+                            </td>
+                            <td class="d-none d-md-table-cell"><t t-esc="record.purchase_names or '-'"/></td>
+                            <td class="d-none d-md-table-cell">
+                                <span t-field="record.create_date" t-options="{'widget': 'date'}"/>
+                            </td>
+                            <td class="text-end"><span t-field="record.amount_total"/></td>
+                            <td class="text-center"><t t-call="supplier_invoice_portal.portal_spr_state_badge"/></td>
+                        </tr>
+                    </t>
+                </tbody>
+            </t>
+        </t>
+    </template>
+
+    <!-- Detalle -->
+    <template id="portal_payment_request_page" name="Portal: detalle de solicitud">
+        <t t-call="portal.portal_layout">
+            <t t-set="o_portal_fullwidth_alert" groups="supplier_invoice_portal.group_spr_validator">
+                <t t-call="portal.portal_back_in_edit_mode">
+                    <t t-set="backend_url"
+                       t-value="'/web#model=supplier.payment.request&amp;id=%s&amp;view_type=form' % record.id"/>
+                </t>
+            </t>
+
+            <div class="row mt-3">
+                <div class="col-12">
+                    <div t-if="request.params.get('submitted')" class="alert alert-success" role="alert">
+                        Su factura fue radicada. Abajo ve el resultado de la validacion automatica.
+                    </div>
+
+                    <div class="card">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <h5 class="mb-0">
+                                Solicitud <t t-esc="record.name"/>
+                                <small class="text-muted">· <t t-esc="document_labels.get(record.document_type)"/>
+                                    <t t-if="record.invoice_ref"> <t t-esc="record.invoice_ref"/></t></small>
+                            </h5>
+                            <t t-call="supplier_invoice_portal.portal_spr_state_badge"/>
+                        </div>
+                        <div class="card-body">
+                            <div t-if="record.state == 'rejected'" class="alert alert-danger" role="alert">
+                                <strong>Rechazada.</strong>
+                                <t t-if="record.rejection_reason">
+                                    Motivo: <span t-esc="record.rejection_reason"/>
+                                </t>
+                                <t t-else="">
+                                    La factura no paso las validaciones automaticas. Revise los puntos de abajo,
+                                    corrija y <a href="/my/payment-requests/new">radique de nuevo</a>.
+                                </t>
+                            </div>
+                            <div t-if="record.state == 'warning'" class="alert alert-warning" role="alert">
+                                <strong>Con observaciones.</strong> Contabilidad esta revisando su factura.
+                                No tiene que hacer nada por ahora; le avisaremos por correo.
+                            </div>
+                            <div t-if="record.state == 'approved'" class="alert alert-success" role="alert">
+                                <strong>Aprobada.</strong> Su factura paso las validaciones y esta en cola de contabilidad.
+                            </div>
+                            <div t-if="record.state == 'invoiced'" class="alert alert-primary" role="alert">
+                                <strong>Registrada.</strong> Su factura fue aceptada y registrada en contabilidad.
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <dl class="row mb-0">
+                                        <dt class="col-5">Orden de compra</dt>
+                                        <dd class="col-7"><t t-esc="purchase_name or '-'"/></dd>
+                                        <t t-if="record.document_type in ('credit_note', 'debit_note')">
+                                            <dt class="col-5">Factura que afecta</dt>
+                                            <dd class="col-7"><t t-esc="origin_name or '-'"/></dd>
+                                        </t>
+                                        <dt class="col-5">Numero</dt>
+                                        <dd class="col-7"><t t-esc="record.invoice_ref or '-'"/></dd>
+                                        <dt class="col-5">Fecha</dt>
+                                        <dd class="col-7">
+                                            <span t-if="record.invoice_date" t-field="record.invoice_date"/>
+                                            <t t-else="">-</t>
+                                        </dd>
+                                        <dt class="col-5">Radicada</dt>
+                                        <dd class="col-7"><span t-field="record.create_date" t-options="{'widget': 'datetime'}"/></dd>
+                                    </dl>
+                                </div>
+                                <div class="col-md-6">
+                                    <dl class="row mb-0">
+                                        <dt class="col-5">Subtotal</dt>
+                                        <dd class="col-7 text-end"><span t-field="record.amount_untaxed"/></dd>
+                                        <dt class="col-5">Impuestos</dt>
+                                        <dd class="col-7 text-end"><span t-field="record.amount_tax"/></dd>
+                                        <dt class="col-5"><strong>Total</strong></dt>
+                                        <dd class="col-7 text-end"><strong><span t-field="record.amount_total"/></strong></dd>
+                                    </dl>
+                                </div>
+                            </div>
+
+                            <div t-if="record.document_type != 'support_doc'" class="mt-3">
+                                <span class="text-muted">CUFE:</span>
+                                <code style="word-break: break-all;" t-esc="record.cufe or '-'"/>
+                            </div>
+
+                            <div class="mt-3">
+                                <a t-if="record.pdf_file" class="btn btn-sm btn-outline-secondary"
+                                   t-attf-href="/web/content/supplier.payment.request/#{record.id}/pdf_file/#{record.pdf_filename or 'factura.pdf'}?download=true">
+                                    <i class="fa fa-file-pdf-o"/> PDF
+                                </a>
+                                <a t-if="record.xml_file" class="btn btn-sm btn-outline-secondary"
+                                   t-attf-href="/web/content/supplier.payment.request/#{record.id}/xml_file/#{record.xml_filename or 'factura.xml'}?download=true">
+                                    <i class="fa fa-file-code-o"/> XML
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div t-if="findings" class="card mt-3">
+                        <div class="card-header"><h6 class="mb-0">Resultado de la validacion</h6></div>
+                        <ul class="list-group list-group-flush">
+                            <li t-foreach="findings" t-as="finding" class="list-group-item d-flex">
+                                <span t-if="finding['level'] == 'error'" class="badge text-bg-danger me-2 align-self-start">Error</span>
+                                <span t-else="" class="badge text-bg-warning me-2 align-self-start">Observacion</span>
+                                <span t-esc="finding['message_es']"/>
+                            </li>
+                        </ul>
+                    </div>
+
+                    <div t-if="record.line_ids" class="card mt-3">
+                        <div class="card-header"><h6 class="mb-0">Lineas de la factura</h6></div>
+                        <div class="table-responsive">
+                            <table class="table table-sm mb-0">
+                                <thead>
+                                    <tr>
+                                        <th>Codigo</th>
+                                        <th>Descripcion</th>
+                                        <th class="text-end">Cantidad</th>
+                                        <th class="text-end">Precio</th>
+                                        <th class="text-end">Subtotal</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr t-foreach="record.line_ids" t-as="line">
+                                        <td><t t-esc="line.product_code or '-'"/></td>
+                                        <td><t t-esc="line.description"/></td>
+                                        <td class="text-end"><t t-esc="line.quantity"/></td>
+                                        <td class="text-end"><span t-field="line.price_unit"/></td>
+                                        <td class="text-end"><span t-field="line.subtotal"/></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div t-if="record.supplier_note" class="card mt-3">
+                        <div class="card-header"><h6 class="mb-0">Su nota</h6></div>
+                        <div class="card-body"><p class="mb-0" t-esc="record.supplier_note"/></div>
+                    </div>
+                </div>
+            </div>
+        </t>
+    </template>
+
+    <!-- Formulario de radicacion. El tipo de documento se elige con enlaces
+         (?document_type=...) para no depender de JavaScript. -->
+    <template id="portal_payment_request_form" name="Portal: radicar factura">
+        <t t-call="portal.portal_layout">
+            <t t-set="is_note" t-value="document_type in ('credit_note', 'debit_note')"/>
+            <t t-set="is_support" t-value="document_type == 'support_doc'"/>
+            <div class="row mt-3">
+                <div class="col-lg-8">
+                    <h4>Radicar documento</h4>
+
+                    <div t-if="cutoff['closed']" class="alert alert-warning" role="alert">
+                        <h5 class="alert-heading">La radicacion esta cerrada por cierre de mes</h5>
+                        <p class="mb-0">
+                            Este mes se recibieron documentos hasta el
+                            <t t-esc="cutoff['moment'].strftime('%d/%m/%Y a las %H:%M')"/>.
+                            Puede radicar de nuevo desde el
+                            <t t-esc="cutoff['reopen'].strftime('%d/%m/%Y')"/>.
+                        </p>
+                    </div>
+
+                    <t t-if="not cutoff['closed']">
+                        <ul class="nav nav-pills mb-3">
+                            <li t-foreach="document_types" t-as="doc_type" class="nav-item">
+                                <a t-attf-href="/my/payment-requests/new?document_type=#{doc_type[0]}"
+                                   t-attf-class="nav-link #{'active' if doc_type[0] == document_type else ''}"
+                                   t-esc="doc_type[1]"/>
+                            </li>
+                        </ul>
+
+                        <p class="text-muted">
+                            <t t-if="document_type == 'invoice'">
+                                Adjunte el PDF de la factura y el XML que le entrego la DIAN<t t-if="not xml_required">, si lo tiene</t>.
+                                Con el XML la validacion es inmediata y no tiene que digitar nada. Si la factura
+                                cubre varias ordenes de compra, marquelas todas.
+                            </t>
+                            <t t-if="is_note">
+                                Adjunte el PDF y el XML de la nota y elija la factura que corrige.
+                                <t t-if="document_type == 'debit_note'">Las notas debito las revisa y acepta contabilidad antes de registrarlas.</t>
+                            </t>
+                            <t t-if="is_support">
+                                Si usted no esta obligado a facturar, adjunte su cuenta de cobro. Nosotros
+                                emitimos el documento soporte al registrarla.
+                            </t>
+                        </p>
+                        <p class="small text-muted" t-if="cutoff['enabled']">
+                            El ultimo dia habil de cada mes se reciben documentos hasta las
+                            <t t-esc="cutoff['moment'].strftime('%H:%M')"/>; despues, desde el primer dia del mes siguiente.
+                        </p>
+
+                        <div t-if="errors.get('general')" class="alert alert-danger" role="alert">
+                            <t t-esc="errors['general']"/>
+                        </div>
+
+                        <div t-if="not is_note and not orders" class="alert alert-warning" role="alert">
+                            No tiene ordenes de compra pendientes de facturar. Si cree que es un error,
+                            comuniquese con el area de compras.
+                        </div>
+                        <div t-if="is_note and not origin_moves" class="alert alert-warning" role="alert">
+                            No encontramos facturas suyas registradas a las que aplicar una nota.
+                        </div>
+
+                        <form t-if="(orders and not is_note) or (is_note and origin_moves)"
+                              method="post" enctype="multipart/form-data"
+                              action="/my/payment-requests/new" class="o_spr_form">
+                            <input type="hidden" name="csrf_token" t-att-value="request.csrf_token()"/>
+                            <input type="hidden" name="document_type" t-att-value="document_type"/>
+
+                            <div t-if="not is_note" class="mb-3">
+                                <label class="form-label">Ordenes de compra <span class="text-danger">*</span></label>
+                                <div t-attf-class="border rounded p-2 #{'border-danger' if errors.get('purchase_ids') else ''}"
+                                     style="max-height: 16rem; overflow-y: auto;">
+                                    <!-- "po" y no "order": las migas de pan de Compras leen
+                                         una variable "order" y mostrarian la ultima del ciclo. -->
+                                    <div t-foreach="orders" t-as="po" class="form-check">
+                                        <input class="form-check-input" type="checkbox" name="purchase_ids"
+                                               t-att-id="'po_%s' % po.id" t-att-value="po.id"
+                                               t-att-checked="'checked' if str(po.id) in form['purchase_ids'] else None"/>
+                                        <label class="form-check-label" t-att-for="'po_%s' % po.id">
+                                            <t t-esc="po.name"/> ·
+                                            <t t-esc="po.date_order" t-options="{'widget': 'date'}"/> ·
+                                            <t t-esc="po.amount_total" t-options="{'widget': 'monetary', 'display_currency': po.currency_id}"/>
+                                        </label>
+                                    </div>
+                                </div>
+                                <div t-if="errors.get('purchase_ids')" class="invalid-feedback d-block" t-esc="errors['purchase_ids']"/>
+                                <div class="form-text">Marque todas las ordenes (remisiones) que incluye el documento.</div>
+                            </div>
+
+                            <div t-if="is_note" class="mb-3">
+                                <label for="origin_move_id" class="form-label">Factura que afecta</label>
+                                <select name="origin_move_id" id="origin_move_id"
+                                        t-attf-class="form-select #{'is-invalid' if errors.get('origin_move_id') else ''}">
+                                    <option value="">Tomarla del XML de la nota</option>
+                                    <t t-foreach="origin_moves" t-as="origin">
+                                        <option t-att-value="origin.id"
+                                                t-att-selected="'selected' if str(origin.id) == form['origin_move_id'] else None">
+                                            <t t-esc="origin.ref or origin.name"/> ·
+                                            <t t-esc="origin.invoice_date" t-options="{'widget': 'date'}"/> ·
+                                            <t t-esc="origin.amount_total" t-options="{'widget': 'monetary', 'display_currency': origin.currency_id}"/>
+                                        </option>
+                                    </t>
+                                </select>
+                                <div t-if="errors.get('origin_move_id')" class="invalid-feedback d-block" t-esc="errors['origin_move_id']"/>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="pdf_file" class="form-label">
+                                    <t t-if="is_support">PDF de la cuenta de cobro</t>
+                                    <t t-else="">PDF del documento</t>
+                                    <span class="text-danger">*</span>
+                                </label>
+                                <div t-attf-class="o_spr_dropzone #{'is-invalid' if errors.get('pdf_file') else ''}">
+                                    <i class="fa fa-cloud-upload fa-2x text-muted d-block mb-1"/>
+                                    <span>Arrastre el PDF aqui o <span class="text-primary">haga clic para elegirlo</span></span>
+                                    <div class="o_spr_dropzone_name small fw-bold mt-1"/>
+                                    <input type="file" name="pdf_file" id="pdf_file" accept="application/pdf,.pdf" required="required"/>
+                                </div>
+                                <div t-if="errors.get('pdf_file')" class="invalid-feedback d-block" t-esc="errors['pdf_file']"/>
+                                <div class="form-text">PDF sin contrasena, maximo 2 MB. Debe subirlo de nuevo si hubo un error.</div>
+                            </div>
+
+                            <t t-if="is_support">
+                                <div class="row">
+                                    <div class="col-md-4 mb-3">
+                                        <label for="invoice_ref" class="form-label">Numero <span class="text-danger">*</span></label>
+                                        <input type="text" name="invoice_ref" id="invoice_ref" maxlength="64"
+                                               t-att-value="form['invoice_ref']"
+                                               t-attf-class="form-control #{'is-invalid' if errors.get('invoice_ref') else ''}"/>
+                                        <div t-if="errors.get('invoice_ref')" class="invalid-feedback d-block" t-esc="errors['invoice_ref']"/>
+                                    </div>
+                                    <div class="col-md-4 mb-3">
+                                        <label for="invoice_date" class="form-label">Fecha <span class="text-danger">*</span></label>
+                                        <input type="date" name="invoice_date" id="invoice_date"
+                                               t-att-value="form['invoice_date']"
+                                               t-attf-class="form-control #{'is-invalid' if errors.get('invoice_date') else ''}"/>
+                                        <div t-if="errors.get('invoice_date')" class="invalid-feedback d-block" t-esc="errors['invoice_date']"/>
+                                    </div>
+                                    <div class="col-md-4 mb-3">
+                                        <label for="amount_total" class="form-label">Valor total <span class="text-danger">*</span></label>
+                                        <input type="text" name="amount_total" id="amount_total" inputmode="decimal"
+                                               t-att-value="form['amount_total']" placeholder="1.250.000"
+                                               t-attf-class="form-control #{'is-invalid' if errors.get('amount_total') else ''}"/>
+                                        <div t-if="errors.get('amount_total')" class="invalid-feedback d-block" t-esc="errors['amount_total']"/>
+                                    </div>
+                                </div>
+                            </t>
+                            <t t-else="">
+                                <div class="mb-3">
+                                    <label for="xml_file" class="form-label">
+                                        XML de la DIAN
+                                        <span t-if="xml_required" class="text-danger">*</span>
+                                        <t t-else="">(recomendado)</t>
+                                    </label>
+                                    <div t-attf-class="o_spr_dropzone #{'is-invalid' if errors.get('xml_file') else ''}">
+                                    <i class="fa fa-cloud-upload fa-2x text-muted d-block mb-1"/>
+                                    <span>Arrastre el XML aqui o <span class="text-primary">haga clic para elegirlo</span></span>
+                                    <div class="o_spr_dropzone_name small fw-bold mt-1"/>
+                                    <input type="file" name="xml_file" id="xml_file" accept="text/xml,application/xml,.xml"
+                                           t-att-required="'required' if xml_required else None"/>
+                                </div>
+                                    <div t-if="errors.get('xml_file')" class="invalid-feedback d-block" t-esc="errors['xml_file']"/>
+                                    <div class="form-text">Es el archivo XML (Invoice, CreditNote, DebitNote o AttachedDocument) que su software de facturacion genera y la DIAN valida.</div>
+                                </div>
+
+                                <!-- Con XML obligatorio el CUFE sale del XML: no se pide. -->
+                                <div class="mb-3" t-if="not xml_required">
+                                    <label for="cufe" class="form-label"><t t-if="is_note">CUDE</t><t t-else="">CUFE</t></label>
+                                    <input type="text" name="cufe" id="cufe" maxlength="120" autocomplete="off"
+                                           t-att-value="form['cufe']"
+                                           t-attf-class="form-control font-monospace #{'is-invalid' if errors.get('cufe') else ''}"
+                                           placeholder="96 caracteres. Si adjunta el XML, puede dejarlo vacio."/>
+                                    <div t-if="errors.get('cufe')" class="invalid-feedback d-block" t-esc="errors['cufe']"/>
+                                </div>
+                            </t>
+
+                            <div class="mb-3">
+                                <label for="supplier_note" class="form-label">Nota para contabilidad (opcional)</label>
+                                <textarea name="supplier_note" id="supplier_note" class="form-control" rows="2"
+                                          maxlength="1000" t-esc="form['supplier_note']"/>
+                            </div>
+
+                            <div class="d-flex gap-2">
+                                <button type="submit" class="btn btn-primary">Radicar</button>
+                                <a href="/my/payment-requests" class="btn btn-link">Cancelar</a>
+                            </div>
+                        </form>
+                    </t>
+                </div>
+                <div class="col-lg-4">
+                    <div class="card mt-lg-5">
+                        <div class="card-body small">
+                            <h6>Que se valida al radicar</h6>
+                            <ul class="mb-0 ps-3">
+                                <li t-if="not is_support">Que el documento este dirigido a <t t-esc="res_company.name"/> y emitido por su NIT.</li>
+                                <li t-if="not is_support">Que el CUFE no se haya radicado antes.</li>
+                                <li t-if="not is_note">Que las ordenes de compra esten vigentes y las cantidades y precios coincidan.</li>
+                                <li t-if="not is_note">Los fletes, envios o domicilios que no esten en la orden se registran aparte, sin frenar la aprobacion.</li>
+                                <li t-if="is_note">Que la nota corresponda a una de sus facturas y no supere su saldo.</li>
+                                <li>Que los totales cuadren.</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </t>
+    </template>
+
+    <!-- Boton en la orden de compra del portal: es donde el proveedor la busca. -->
+    <template id="portal_purchase_order_spr_button" name="Radicar factura desde la orden"
+              inherit_id="purchase.portal_my_purchase_order">
+        <xpath expr="//div[hasclass('o_download_pdf')]" position="after">
+            <div t-if="order.sudo()._spr_accepts_invoice()" class="mb-1">
+                <a class="btn btn-primary w-100"
+                   t-attf-href="/my/payment-requests/new?purchase_id=#{order.id}">
+                    <i class="fa fa-upload me-1"/> Radicar factura de esta orden
+                </a>
+            </div>
+        </xpath>
+    </template>
+
+</odoo>

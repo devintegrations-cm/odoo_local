@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+
+    <t t-name="supplier_invoice_portal.PreviewBinaryField" t-inherit="web.BinaryField" t-inherit-mode="primary">
+        <xpath expr="//t[@name='download']" position="before">
+            <button t-if="canPreview"
+                    class="btn btn-link btn-sm lh-1 fa fa-eye o_spr_preview_file_button"
+                    data-tooltip="Vista previa" aria-label="Vista previa"
+                    t-on-click="onFilePreview"/>
+        </xpath>
+        <xpath expr="//a[hasclass('o_form_uri')]" position="after">
+            <button t-if="canPreview"
+                    class="btn btn-link btn-sm lh-1 fa fa-eye o_spr_preview_file_button"
+                    data-tooltip="Vista previa" aria-label="Vista previa"
+                    t-on-click="onFilePreview"/>
+        </xpath>
+    </t>
+
+    <t t-name="supplier_invoice_portal.FilePreviewDialog">
+        <Dialog title="props.title" size="'xl'" footer="false" contentClass="'o_spr_file_preview'">
+            <iframe t-if="props.pdfUrl" t-att-src="props.pdfUrl" class="w-100 border-0"
+                    style="height: 80vh;"/>
+            <pre t-else="" class="mb-0 small" style="max-height: 80vh; white-space: pre;"
+                 t-esc="props.xmlText"/>
+        </Dialog>
+    </t>
+
+</templates>

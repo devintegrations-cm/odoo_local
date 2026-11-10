@@ -1,0 +1,31 @@
+/* Zona para arrastrar y soltar archivos en el portal (DECISIONS.md #45).
+   El input file es transparente y cubre toda la zona: el clic abre el dialogo
+   y soltar el archivo funciona aunque el JS no cargue. */
+.o_spr_dropzone {
+    position: relative;
+    border: 2px dashed #ced4da;
+    border-radius: 0.5rem;
+    padding: 1rem;
+    text-align: center;
+    background-color: #f8f9fa;
+    transition: border-color 0.15s, background-color 0.15s;
+}
+.o_spr_dropzone input[type="file"] {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0;
+    cursor: pointer;
+}
+.o_spr_dropzone.o_spr_dragover {
+    border-color: #0d6efd;
+    background-color: rgba(13, 110, 253, 0.06);
+}
+.o_spr_dropzone.o_spr_has_file {
+    border-style: solid;
+    border-color: #198754;
+}
+.o_spr_dropzone.is-invalid {
+    border-color: #dc3545;
+}

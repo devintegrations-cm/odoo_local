@@ -1,0 +1,5 @@
+# Dependencias Python de supplier_invoice_portal (DECISIONS.md #1).
+# Odoo.sh solo lee el requirements.txt de la RAIZ del repositorio: copiar estas
+# lineas alli. pypdf es opcional (solo cuenta paginas del PDF); Odoo.sh ya trae
+# la 3.17.4, por eso el minimo es bajo y no fuerza una reinstalacion.
+pypdf>=3.0

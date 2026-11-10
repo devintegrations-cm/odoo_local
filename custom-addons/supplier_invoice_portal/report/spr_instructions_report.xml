@@ -1,0 +1,302 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Instructivo del portal en PDF (DECISIONS.md #52). Reemplaza el
+         construir_pdf.py externo: se genera con wkhtmltopdf desde el contacto
+         y se adjunta solo al correo "Enviar instructivo del portal". -->
+
+    <record id="paperformat_spr_instructions" model="report.paperformat">
+        <field name="name">Instructivo del portal (carta)</field>
+        <field name="format">Letter</field>
+        <field name="orientation">Portrait</field>
+        <field name="margin_top">14</field>
+        <field name="margin_bottom">14</field>
+        <field name="margin_left">18</field>
+        <field name="margin_right">18</field>
+        <field name="header_line" eval="False"/>
+        <field name="header_spacing">0</field>
+        <field name="dpi">90</field>
+    </record>
+
+    <record id="report_spr_instructions" model="ir.actions.report">
+        <field name="name">Instructivo del portal de proveedores</field>
+        <field name="model">res.partner</field>
+        <field name="report_type">qweb-pdf</field>
+        <field name="report_name">supplier_invoice_portal.report_spr_instructions_document</field>
+        <field name="report_file">supplier_invoice_portal.report_spr_instructions_document</field>
+        <field name="print_report_name">'Instructivo portal de proveedores'</field>
+        <field name="paperformat_id" ref="paperformat_spr_instructions"/>
+        <field name="groups_id" eval="[(4, ref('supplier_invoice_portal.group_spr_manager'))]"/>
+    </record>
+
+    <template id="report_spr_instructions_document">
+        <t t-call="web.html_container">
+            <t t-foreach="docs" t-as="o">
+                <t t-set="company" t-value="o._spr_instructions_company()"/>
+                <t t-set="cutoff" t-value="o._spr_cutoff_label()"/>
+                <div class="article o_spr_instructions" t-att-data-oe-model="o._name" t-att-data-oe-id="o.id">
+                    <style>
+                        .o_spr_instructions { font-family: "DejaVu Sans", Arial, sans-serif; font-size: 14px;
+                            line-height: 1.5; color: #22262d; }
+                        .o_spr_instructions h1 { font-size: 21px; color: #1b2638; font-weight: bold;
+                            margin: 0 0 10px 0; }
+                        .o_spr_instructions h2 { font-size: 15px; color: #1b2638; font-weight: bold;
+                            margin: 12px 0 4px 0; }
+                        .o_spr_instructions .spr-band { background: #1b2638; color: #fff; font-size: 11px;
+                            padding: 5px 10px; margin-bottom: 14px; }
+                        .o_spr_instructions .spr-band b { letter-spacing: 1px; }
+                        .o_spr_instructions .spr-gold { color: #b48f4e; }
+                        .o_spr_instructions .spr-title { font-size: 34px; color: #1b2638; font-weight: bold;
+                            line-height: 1.2; }
+                        .o_spr_instructions .spr-subtitle { font-size: 17px; color: #b48f4e; }
+                        .o_spr_instructions .spr-small { font-size: 11px; color: #5b6472; }
+                        .o_spr_instructions .spr-callout { background: #f4efe6; border-left: 4px solid #b48f4e;
+                            color: #1b2638; padding: 8px 12px; margin: 8px 0 12px 0; page-break-inside: avoid; }
+                        .o_spr_instructions .spr-callout.spr-red { background: #fbeeec; border-left-color: #c0392b; }
+                        .o_spr_instructions .spr-shot { text-align: center; margin: 8px 0 12px 0;
+                            page-break-inside: avoid; }
+                        .o_spr_instructions .spr-shot img { border: 1px solid #d8d2c6; max-width: 100%; }
+                        .o_spr_instructions .spr-shot div { font-size: 11px; color: #5b6472; margin-top: 3px; }
+                        .o_spr_instructions ol, .o_spr_instructions ul { padding-left: 22px; margin: 4px 0 8px 0; }
+                        .o_spr_instructions li { margin-bottom: 3px; }
+                        .o_spr_instructions table.spr-table { width: 100%; border-collapse: collapse; margin: 6px 0; }
+                        .o_spr_instructions table.spr-table td, .o_spr_instructions table.spr-table th {
+                            border-bottom: 1px solid #ddd6c8; padding: 5px 6px; vertical-align: top; text-align: left; }
+                        .o_spr_instructions table.spr-table th { background: #f4efe6; }
+                        .o_spr_instructions .spr-check { color: #b48f4e; width: 22px; }
+                        .o_spr_instructions .spr-page { page-break-after: always; }
+                        .o_spr_instructions .spr-faq { page-break-inside: avoid; }
+                    </style>
+
+                    <!-- Portada -->
+                    <div class="spr-page">
+                        <div style="height: 110px;"/>
+                        <div class="spr-subtitle"><t t-out="(company.name or '').upper()"/></div>
+                        <div class="spr-title">Portal de proveedores</div>
+                        <div class="spr-subtitle">Instructivo para consultar sus órdenes y facturas, y radicar sus documentos</div>
+                        <div style="height: 28px;"/>
+                        <p>Este instructivo le explica, paso a paso, cómo usar el portal de proveedores de
+                            <t t-out="company.name"/>: cómo ingresar, consultar las órdenes de compra y el estado
+                            de pago de sus facturas, mantener al día sus datos y documentos, y radicar sus facturas
+                            electrónicas, notas crédito y notas débito.</p>
+                        <div class="spr-callout"><b>Para que su factura se pague a tiempo:</b> revise que la
+                            información coincida con la orden de compra y adjunte los documentos PDF solicitados.
+                            Una factura incompleta o con diferencias se rechaza y tiene que radicarse de nuevo, lo
+                            que retrasa el pago.</div>
+                        <h2>Contenido</h2>
+                        <ol>
+                            <li>Ingresar al portal</li>
+                            <li>Su cuenta: qué encuentra en el portal</li>
+                            <li>Ver sus órdenes de compra</li>
+                            <li>Ver sus facturas y su estado de pago</li>
+                            <li>Actualizar sus datos y documentos (RUT, Cámara de Comercio, certificación bancaria)</li>
+                            <li>Radicar una factura</li>
+                            <li>Seguir el estado de lo radicado</li>
+                            <li>Lista de verificación para el pago oportuno</li>
+                            <li>Preguntas frecuentes</li>
+                        </ol>
+                        <p class="spr-small">Las imágenes de este instructivo son del portal real, con datos de ejemplo.</p>
+                    </div>
+
+                    <!-- 1. Ingreso -->
+                    <div class="spr-page">
+                        <div class="spr-band"><b><t t-out="(company.name or '').upper()"/></b> · Instructivo del portal de proveedores</div>
+                        <h1>1. Ingresar al portal</h1>
+                        <p>Cuando <t t-out="company.name"/> habilita a su empresa en el portal, usted recibe un
+                            correo de invitación con el enlace de ingreso. La primera vez, el enlace le pide crear
+                            su contraseña.</p>
+                        <ol>
+                            <li>Abra el enlace del correo de invitación (<t t-out="o.get_base_url()"/>/my). Guárdelo en sus favoritos para las próximas veces.</li>
+                            <li>Escriba su <b>correo</b> (el mismo al que le llegó la invitación) y su <b>contraseña</b>.</li>
+                            <li>Pulse <b>Iniciar sesión</b>.</li>
+                        </ol>
+                        <div class="spr-shot"><img t-att-src="o._spr_instructions_image('c_01_login')" style="width: 100%;"/>
+                            <div>Página de ingreso al portal.</div></div>
+                        <div class="spr-callout">¿Olvidó su contraseña? Use <b>Restablecer contraseña</b> en esta
+                            misma página: le llegará un correo para crear una nueva. La contraseña es personal; si
+                            varias personas de su empresa radican facturas, solicite un usuario para cada una.</div>
+                    </div>
+
+                    <!-- 2. Mi cuenta -->
+                    <div class="spr-page">
+                        <div class="spr-band"><b><t t-out="(company.name or '').upper()"/></b> · Instructivo del portal de proveedores</div>
+                        <h1>2. Su cuenta: qué encuentra en el portal</h1>
+                        <p>Al ingresar llega a <b>Mi cuenta</b>. Las opciones que usará como proveedor son:</p>
+                        <ul>
+                            <li><b>Nuestras órdenes</b>: las órdenes de compra que <t t-out="company.name"/> le ha hecho.</li>
+                            <li><b>Nuestras facturas</b>: las facturas suyas que ya están registradas, con su estado de pago.</li>
+                            <li><b>Radicar facturas</b>: donde radica sus facturas, notas y cuentas de cobro, y sigue su estado.</li>
+                            <li><b>Editar información</b> (a la derecha): sus datos de facturación y sus documentos.</li>
+                        </ul>
+                        <div class="spr-shot"><img t-att-src="o._spr_instructions_image('c_02_inicio')" style="width: 100%;"/>
+                            <div>Mi cuenta. Las tarjetas de proveedor están en la segunda y tercera fila.</div></div>
+                    </div>
+
+                    <!-- 3. Órdenes -->
+                    <div class="spr-page">
+                        <div class="spr-band"><b><t t-out="(company.name or '').upper()"/></b> · Instructivo del portal de proveedores</div>
+                        <h1>3. Ver sus órdenes de compra</h1>
+                        <p>En <b>Nuestras órdenes</b> encuentra sus órdenes de compra, con su número, fecha y valor.
+                            Pulse una orden para ver su detalle: productos, cantidades, precios y condiciones.</p>
+                        <div class="spr-shot"><img t-att-src="o._spr_instructions_image('c_03_ordenes')" style="width: 100%;"/>
+                            <div>Nuestras órdenes: lista de órdenes de compra.</div></div>
+                        <p>Desde el detalle de una orden puede radicar directamente su factura con el botón
+                            <b>Radicar factura de esta orden</b>. El botón solo aparece cuando la orden se puede
+                            facturar: es del año en curso, está confirmada, no tiene factura registrada ni una
+                            radicación en curso.</p>
+                        <div class="spr-shot"><img t-att-src="o._spr_instructions_image('c_04_orden')" style="width: 100%;"/>
+                            <div>Detalle de una orden de compra con el botón para radicar.</div></div>
+                    </div>
+
+                    <!-- 4. Facturas -->
+                    <div class="spr-page">
+                        <div class="spr-band"><b><t t-out="(company.name or '').upper()"/></b> · Instructivo del portal de proveedores</div>
+                        <h1>4. Ver sus facturas y su estado de pago</h1>
+                        <p>En <b>Nuestras facturas</b> están las facturas suyas que ya están registradas en
+                            contabilidad. Para cada una ve la fecha, la fecha de vencimiento, el valor pendiente y
+                            el estado: <b>En espera del pago</b> o <b>Pagado</b>.</p>
+                        <div class="spr-shot"><img t-att-src="o._spr_instructions_image('c_05_facturas')" style="width: 100%;"/>
+                            <div>Nuestras facturas: estado de pago de cada factura.</div></div>
+                        <div class="spr-callout">Una factura aparece aquí cuando ya fue radicada, aprobada y
+                            registrada. Si la radicó y todavía no la ve, consulte su estado en <b>Radicar
+                            facturas</b> (sección 7).</div>
+                    </div>
+
+                    <!-- 5. Datos y documentos -->
+                    <div class="spr-page">
+                        <div class="spr-band"><b><t t-out="(company.name or '').upper()"/></b> · Instructivo del portal de proveedores</div>
+                        <h1>5. Actualizar sus datos y documentos</h1>
+                        <p>Antes de radicar su primera factura, y cada vez que cambien, mantenga al día sus datos y
+                            documentos: los necesitamos para registrar sus facturas y hacerle los pagos.</p>
+                        <ol>
+                            <li>En <b>Mi cuenta</b>, pulse <b>Editar información</b>.</li>
+                            <li>Revise sus datos de contacto y, en <b>Facturación electrónica</b>, el tipo de
+                                régimen, el tipo de responsabilidad, el municipio y el <b>email de facturación</b>.</li>
+                            <li>En <b>Documentos</b>, adjunte la <b>Cámara de Comercio</b>, el <b>RUT</b> y la
+                                <b>certificación de cuenta bancaria</b>. Puede arrastrar el archivo sobre el
+                                recuadro o hacer clic para elegirlo.</li>
+                            <li>Pulse <b>Guardar</b>. Con <b>Ver</b> o <b>Abrir</b> puede revisar el documento que quedó cargado.</li>
+                        </ol>
+                        <div class="spr-shot"><img t-att-src="o._spr_instructions_image('c_10_documentos')" style="width: 78%;"/>
+                            <div>Editar información: facturación electrónica y documentos.</div></div>
+                        <div class="spr-callout spr-red"><b>Los documentos deben ser PDF, sin contraseña y de máximo
+                            2 MB.</b> Un PDF protegido con clave no se puede abrir y se rechaza. Si el archivo pesa
+                            más, escanéelo en menor resolución. La certificación bancaria debe corresponder a la
+                            cuenta a la que espera recibir los pagos.</div>
+                    </div>
+
+                    <!-- 6. Radicar -->
+                    <div class="spr-page">
+                        <div class="spr-band"><b><t t-out="(company.name or '').upper()"/></b> · Instructivo del portal de proveedores</div>
+                        <h1>6. Radicar una factura</h1>
+                        <p>Puede entrar por <b>Radicar facturas → Radicar factura</b>, o desde el detalle de la
+                            orden con <b>Radicar factura de esta orden</b>.</p>
+                        <ol>
+                            <li>Elija el tipo de documento: <b>Factura electrónica</b>, <b>Nota crédito</b> o
+                                <b>Nota débito</b>.<t t-if="o.spr_support_document"> Como su empresa no está
+                                obligada a facturar, verá también <b>Cuenta de cobro</b>.</t></li>
+                            <li>Marque la <b>orden u órdenes de compra</b> que cubre la factura. Si cubre varias,
+                                márquelas todas. Solo aparecen las órdenes del año en curso.</li>
+                            <li>Adjunte el <b>PDF</b> de la factura (sin contraseña, máximo 2 MB).</li>
+                            <li t-if="not o.spr_support_document">Adjunte el <b>XML</b> que le entregó la DIAN.
+                                <b>Es obligatorio</b>: con él la validación es inmediata y no tiene que digitar nada.</li>
+                            <li t-else="">Si radica una cuenta de cobro, digite número, fecha y valor total;
+                                nosotros emitimos el documento soporte.</li>
+                            <li>Si quiere, escriba una nota para contabilidad, y pulse <b>Radicar</b>.</li>
+                        </ol>
+                        <div class="spr-callout"><b>Cierre de fin de mes:</b> el último día hábil de cada mes se
+                            reciben documentos hasta las <b><t t-out="cutoff"/></b> Después de esa hora, el portal
+                            recibe de nuevo desde el primer día del mes siguiente.</div>
+                        <div class="spr-shot"><img t-att-src="o._spr_instructions_image('c_07_formulario')" style="width: 78%;"/>
+                            <div>Formulario para radicar una factura electrónica.</div></div>
+                        <div style="page-break-inside: avoid;">
+                            <h2>Notas crédito y débito</h2>
+                            <p>Se radican igual, eligiendo la factura que corrigen. Si su orden ya tiene una
+                                factura, lo que falte o sobre se radica como nota sobre esa factura, no como una
+                                factura nueva.</p>
+                        </div>
+                    </div>
+
+                    <!-- 7. Estado -->
+                    <div class="spr-page">
+                        <div class="spr-band"><b><t t-out="(company.name or '').upper()"/></b> · Instructivo del portal de proveedores</div>
+                        <h1>7. Seguir el estado de lo radicado</h1>
+                        <p>En <b>Radicar facturas</b> ve todo lo que ha radicado y su estado. El portal valida cada
+                            documento al recibirlo: que esté dirigido a <t t-out="company.name"/> y emitido por su
+                            NIT, que no se haya radicado antes, que la orden esté vigente y que cantidades, precios
+                            y totales cuadren.</p>
+                        <div class="spr-shot"><img t-att-src="o._spr_instructions_image('c_06_radicaciones')" style="width: 80%;"/>
+                            <div>Lista de documentos radicados y su estado.</div></div>
+                        <table class="spr-table">
+                            <tr><th style="width: 22%;">Estado</th><th style="width: 43%;">Qué significa</th><th>Qué hacer</th></tr>
+                            <tr><td><b>Aprobada</b></td><td>Pasó las validaciones y está en cola de contabilidad.</td>
+                                <td>Nada: espere el registro.</td></tr>
+                            <tr><td><b>Con observaciones</b></td><td>Contabilidad está revisando una diferencia
+                                (por ejemplo, un precio que no cuadra con la orden).</td>
+                                <td>Esté atento al correo por si le piden algo.</td></tr>
+                            <tr><td><b>Rechazada</b></td><td>No pasó las validaciones. El detalle dice por qué.</td>
+                                <td>Corrija lo indicado y radique de nuevo.</td></tr>
+                            <tr><td><b>Registrada</b></td><td>Se aceptó y se registró en contabilidad.</td>
+                                <td>Siga su pago en <b>Nuestras facturas</b>.</td></tr>
+                        </table>
+                        <div style="page-break-inside: avoid;">
+                            <p>Pulse una radicación para ver su detalle. Si fue rechazada, en <b>Resultado de la
+                                validación</b> aparece el motivo:</p>
+                            <div class="spr-shot"><img t-att-src="o._spr_instructions_image('c_09_detalle_rechazada')" style="width: 58%;"/>
+                                <div>Radicación rechazada: la factura ya se había radicado antes.</div></div>
+                        </div>
+                        <p class="spr-small">Además, el portal le avisa por correo cuando recibe su documento, si lo
+                            rechaza y cuando queda registrado en contabilidad.</p>
+                    </div>
+
+                    <!-- 8. Lista de verificación -->
+                    <div class="spr-page">
+                        <div class="spr-band"><b><t t-out="(company.name or '').upper()"/></b> · Instructivo del portal de proveedores</div>
+                        <h1>8. Lista de verificación para el pago oportuno</h1>
+                        <p>Antes de pulsar <b>Radicar</b>, revise:</p>
+                        <table class="spr-table">
+                            <tr><td class="spr-check">☐</td><td>La factura está a nombre de
+                                <b><t t-out="(company.name or '').upper()"/></b><t t-if="company.vat">, NIT
+                                <b><t t-out="company.vat"/></b></t>.</td></tr>
+                            <tr><td class="spr-check">☐</td><td>La factura está emitida con <b>su</b> NIT, el mismo
+                                registrado en el portal.</td></tr>
+                            <tr><td class="spr-check">☐</td><td>Marcó la orden u órdenes de compra correctas.</td></tr>
+                            <tr><td class="spr-check">☐</td><td>Cantidades y precios coinciden con la orden de compra.
+                                Si hay diferencias, aclárelas con su contacto de compras <b>antes</b> de facturar.</td></tr>
+                            <tr><td class="spr-check">☐</td><td>Adjuntó el PDF (sin contraseña, máximo 2 MB)<t t-if="not o.spr_support_document"> y el XML de la DIAN</t>.</td></tr>
+                            <tr><td class="spr-check">☐</td><td>Radica cada factura <b>una sola vez</b>. Si fue
+                                rechazada, corrija y radique de nuevo; si está en revisión, espere la respuesta.</td></tr>
+                            <tr><td class="spr-check">☐</td><td>Sus documentos (RUT, Cámara de Comercio y
+                                certificación bancaria) están cargados y vigentes.</td></tr>
+                            <tr><td class="spr-check">☐</td><td>Su email de facturación está al día, para recibir las
+                                notificaciones.</td></tr>
+                            <tr><td class="spr-check">☐</td><td>Radica antes del cierre: último día hábil del mes,
+                                hasta las <t t-out="cutoff"/></td></tr>
+                        </table>
+                    </div>
+
+                    <!-- 9. Preguntas frecuentes -->
+                    <div>
+                        <div class="spr-band"><b><t t-out="(company.name or '').upper()"/></b> · Instructivo del portal de proveedores</div>
+                        <h1>9. Preguntas frecuentes</h1>
+                        <div class="spr-faq"><h2>No veo la orden de compra para radicar.</h2>
+                            <p>La orden debe ser del año en curso y estar confirmada. Tampoco aparece si ya tiene
+                                una factura registrada o una radicación en curso: si falta o sobra algo, radique una
+                                nota sobre esa factura. Si cree que es un error, comuníquese con su contacto de
+                                compras.</p></div>
+                        <div class="spr-faq"><h2>El portal dice que mi empresa no está habilitada.</h2>
+                            <p>Pida a su contacto de compras que habilite a su empresa en el portal.</p></div>
+                        <div class="spr-faq"><h2>Mi PDF no se deja adjuntar.</h2>
+                            <p>Debe ser PDF, sin contraseña y de máximo 2 MB. Si tiene clave, guarde una copia sin
+                                protección; si pesa más, escanéelo en menor resolución.</p></div>
+                        <div class="spr-faq"><h2>No encuentro el XML de mi factura.</h2>
+                            <p>Es el archivo que genera su software de facturación electrónica junto con el PDF
+                                (Invoice o AttachedDocument). Pídaselo a su proveedor de facturación electrónica.</p></div>
+                        <div class="spr-faq"><h2>Mi factura fue rechazada.</h2>
+                            <p>Abra la radicación: en <b>Resultado de la validación</b> está el motivo. Corrija y
+                                radique de nuevo.</p></div>
+                    </div>
+                </div>
+            </t>
+        </t>
+    </template>
+</odoo>

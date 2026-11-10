@@ -1,0 +1,391 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="view_spr_request_tree" model="ir.ui.view">
+        <field name="name">supplier.payment.request.tree</field>
+        <field name="model">supplier.payment.request</field>
+        <field name="arch" type="xml">
+            <tree string="Solicitudes de pago" decoration-danger="state == 'rejected'"
+                  decoration-warning="state == 'warning'"
+                  decoration-success="state in ('approved', 'invoiced')"
+                  decoration-muted="state == 'cancelled'">
+                <field name="name"/>
+                <field name="document_type" optional="show"/>
+                <field name="partner_id"/>
+                <field name="invoice_ref"/>
+                <field name="invoice_date"/>
+                <field name="purchase_ids" widget="many2many_tags"/>
+                <field name="amount_total" sum="Total"/>
+                <field name="currency_id" column_invisible="True"/>
+                <field name="source" optional="hide"/>
+                <field name="portal_submitted" optional="hide"/>
+                <field name="submitted_date" optional="hide"/>
+                <field name="move_id" optional="show"/>
+                <field name="state" widget="badge"
+                       decoration-danger="state == 'rejected'"
+                       decoration-warning="state == 'warning'"
+                       decoration-success="state in ('approved', 'invoiced')"/>
+                <field name="company_id" groups="base.group_multi_company" optional="hide"/>
+            </tree>
+        </field>
+    </record>
+
+    <record id="view_spr_request_form" model="ir.ui.view">
+        <field name="name">supplier.payment.request.form</field>
+        <field name="model">supplier.payment.request</field>
+        <field name="arch" type="xml">
+            <form string="Solicitud de pago">
+                <header>
+                    <button name="action_validate" type="object" string="Validar"
+                            class="btn-primary"
+                            invisible="state not in ('draft', 'rejected') or rejection_reason"/>
+                    <button name="action_validate" type="object" string="Revalidar"
+                            invisible="state not in ('approved', 'warning', 'validating')"
+                            help="Vuelve a correr las reglas. Los emparejamientos manuales se conservan."/>
+                    <button name="action_validate_ai" type="object" string="Validar con IA"
+                            groups="supplier_invoice_portal.group_spr_validator"
+                            invisible="state in ('invoiced', 'cancelled') or rejection_reason"
+                            help="Valida otra vez pidiendo a la IA emparejar lineas y revisar unidades cuando cantidad y precio no cuadran con la orden."/>
+                    <button name="action_accept_debit_note" type="object" string="Aceptar nota debito"
+                            class="btn-primary"
+                            groups="supplier_invoice_portal.group_spr_manager"
+                            confirm="La nota debito aumenta lo que se le paga al proveedor. ¿La acepta?"
+                            invisible="document_type != 'debit_note' or note_accepted_by_id or state not in ('approved', 'warning')"/>
+                    <button name="action_create_bill" type="object" string="Crear factura"
+                            class="btn-primary"
+                            groups="supplier_invoice_portal.group_spr_validator"
+                            invisible="state not in ('approved', 'warning') or move_id or (document_type == 'debit_note' and not note_accepted_by_id)"/>
+                    <button name="action_check_dian" type="object" string="Consultar DIAN"
+                            invisible="not cufe or state in ('invoiced', 'cancelled')"/>
+                    <button name="action_open_reject_wizard" type="object" string="Rechazar"
+                            groups="supplier_invoice_portal.group_spr_manager"
+                            invisible="state not in ('approved', 'warning', 'validating')"/>
+                    <button name="action_reset_to_draft" type="object"
+                            string="Volver a borrador"
+                            groups="supplier_invoice_portal.group_spr_manager"
+                            invisible="state in ('draft', 'invoiced', 'cancelled')"/>
+                    <button name="action_cancel" type="object" string="Cancelar"
+                            groups="supplier_invoice_portal.group_spr_manager"
+                            invisible="state in ('invoiced', 'cancelled')"/>
+                    <field name="state" widget="statusbar"
+                           statusbar_visible="draft,approved,invoiced"/>
+                </header>
+                <sheet>
+                    <div class="oe_button_box" name="button_box">
+                        <button name="action_view_purchases" type="object" class="oe_stat_button"
+                                icon="fa-shopping-cart" invisible="not purchase_count">
+                            <field name="purchase_count" widget="statinfo" string="Ordenes de compra"/>
+                        </button>
+                        <button name="action_view_move" type="object" class="oe_stat_button"
+                                icon="fa-pencil-square-o" invisible="not move_id">
+                            <span class="o_stat_text">Factura</span>
+                        </button>
+                    </div>
+                    <div class="oe_title">
+                        <h1><field name="name" readonly="1"/></h1>
+                    </div>
+                    <group>
+                        <group name="main">
+                            <field name="document_type"
+                                   readonly="state not in ('draft', 'rejected')"/>
+                            <field name="partner_id"
+                                   readonly="state not in ('draft', 'rejected')"
+                                   options="{'no_create': True}"/>
+                            <field name="origin_move_id"
+                                   invisible="document_type not in ('credit_note', 'debit_note')"
+                                   required="document_type in ('credit_note', 'debit_note') and state not in ('draft', 'rejected', 'cancelled')"
+                                   readonly="not partner_id or state not in ('draft', 'rejected')"
+                                   options="{'no_create': True}"/>
+                            <field name="purchase_ids" widget="many2many_tags"
+                                   readonly="not partner_id or state not in ('draft', 'rejected')"
+                                   options="{'no_create': True}"/>
+                            <field name="cufe" invisible="document_type == 'support_doc'"
+                                   readonly="state not in ('draft', 'rejected')"/>
+                            <field name="source" readonly="1"/>
+                            <field name="dian_cufe_check" readonly="1"/>
+                        </group>
+                        <group name="accounting">
+                            <field name="journal_id" options="{'no_create': True}"/>
+                            <field name="move_id" readonly="1" invisible="not move_id"/>
+                            <field name="submitted_date" readonly="1"/>
+                            <field name="portal_submitted" readonly="1"/>
+                            <field name="submitted_by_partner_id" invisible="not submitted_by_partner_id"/>
+                            <field name="note_accepted_by_id" invisible="document_type != 'debit_note'"/>
+                            <field name="note_accepted_date" invisible="not note_accepted_by_id"/>
+                            <field name="company_id" invisible="1"/>
+                            <field name="currency_id" groups="base.group_multi_currency"/>
+                        </group>
+                    </group>
+                    <div class="alert alert-info" role="alert" invisible="not supplier_note">
+                        <strong>Nota del proveedor:</strong> <field name="supplier_note" readonly="1" nolabel="1"/>
+                    </div>
+                    <div class="alert alert-info" role="alert"
+                         invisible="document_type != 'debit_note' or note_accepted_by_id or state not in ('approved', 'warning')">
+                        <strong>Nota debito pendiente de aceptacion:</strong> aumenta el valor pactado con el
+                        proveedor. El Responsable debe aceptarla antes de crear la factura.
+                    </div>
+                    <div class="alert alert-info" role="alert" invisible="document_type != 'support_doc'">
+                        <strong>Cuenta de cobro:</strong> el proveedor no factura. Numero, fecha y total los
+                        declaro el proveedor; las lineas salen de lo pendiente de las ordenes y se pueden
+                        ajustar. La factura se crea en el diario de documento soporte.
+                    </div>
+                    <div class="alert alert-warning" role="alert" invisible="state != 'warning'">
+                        <strong>Con observaciones:</strong> revise la pestana <em>Validacion</em>.
+                        Si todo esta en orden, empareje las lineas que falten y cree la factura.
+                    </div>
+                    <div class="alert alert-danger" role="alert" invisible="state != 'rejected'">
+                        <strong>Rechazada:</strong> <field name="rejection_reason" readonly="1" nolabel="1"/>
+                    </div>
+                    <notebook>
+                        <page string="Datos extraidos" name="extracted">
+                            <group>
+                                <field name="party_check_enabled" invisible="1"/>
+                                <group string="Emisor" invisible="not party_check_enabled">
+                                    <field name="supplier_nit"/>
+                                    <field name="supplier_name"/>
+                                </group>
+                                <group string="Adquiriente" invisible="not party_check_enabled">
+                                    <field name="customer_nit"/>
+                                    <field name="customer_name"/>
+                                </group>
+                                <group string="Factura">
+                                    <field name="invoice_ref"/>
+                                    <field name="invoice_date"/>
+                                </group>
+                                <group string="Totales">
+                                    <field name="amount_untaxed"/>
+                                    <field name="amount_tax"/>
+                                    <field name="amount_total"/>
+                                </group>
+                            </group>
+                        </page>
+                        <page string="Lineas y emparejamiento" name="lines">
+                            <field name="line_ids" readonly="state in ('invoiced', 'cancelled')">
+                                <tree editable="bottom">
+                                    <field name="sequence" widget="handle"/>
+                                    <field name="product_code"/>
+                                    <field name="description"/>
+                                    <field name="quantity"/>
+                                    <field name="unit_code" optional="hide"/>
+                                    <field name="price_unit"/>
+                                    <field name="tax_rate"/>
+                                    <field name="subtotal" sum="Subtotal"/>
+                                    <field name="po_line_id" options="{'no_create': True}"
+                                           decoration-danger="not po_line_id and not is_extra_charge"/>
+                                    <field name="is_extra_charge"/>
+                                    <field name="uom_factor" optional="show"/>
+                                    <field name="po_quantity" optional="show"/>
+                                    <field name="po_price_unit" optional="hide"/>
+                                    <field name="uom_note" optional="hide" force_save="1"/>
+                                    <field name="match_method" readonly="1" force_save="1"/>
+                                    <field name="match_confidence" optional="show" readonly="1" force_save="1"/>
+                                    <field name="match_note" optional="show" force_save="1"/>
+                                    <field name="currency_id" column_invisible="True"/>
+                                </tree>
+                            </field>
+                        </page>
+                        <!-- La orden al lado de la factura (DECISIONS.md #56). -->
+                        <page string="Orden de compra" name="purchase" invisible="not purchase_count">
+                            <group>
+                                <group string="Factura del proveedor">
+                                    <field name="amount_untaxed" string="Subtotal" readonly="1"/>
+                                    <field name="amount_total" string="Total" readonly="1"/>
+                                </group>
+                                <group string="Ordenes de compra">
+                                    <field name="purchase_amount_untaxed"/>
+                                    <field name="purchase_amount_total"/>
+                                </group>
+                            </group>
+                            <field name="purchase_line_ids" readonly="1" nolabel="1">
+                                <tree decoration-muted="qty_to_invoice == 0">
+                                    <field name="order_id" optional="show"/>
+                                    <field name="product_id"/>
+                                    <field name="name" optional="hide"/>
+                                    <field name="product_qty"/>
+                                    <field name="qty_received"/>
+                                    <field name="qty_invoiced"/>
+                                    <field name="qty_to_invoice" string="Por facturar"/>
+                                    <field name="product_uom" string="Unidad" groups="uom.group_uom"/>
+                                    <field name="price_unit"/>
+                                    <field name="taxes_id" widget="many2many_tags" optional="show"/>
+                                    <field name="price_subtotal" sum="Subtotal"/>
+                                    <field name="currency_id" column_invisible="True"/>
+                                </tree>
+                            </field>
+                        </page>
+                        <page string="Validacion" name="validation">
+                            <field name="validation_summary" readonly="1"/>
+                            <group string="Detalle tecnico"
+                                   groups="supplier_invoice_portal.group_spr_manager">
+                                <field name="validation_json" readonly="1" widget="text"/>
+                                <field name="extracted_json" readonly="1" widget="text"/>
+                            </group>
+                        </page>
+                        <page string="Adjuntos" name="attachments">
+                            <group>
+                                <!-- El ojo abre la vista previa (DECISIONS.md #55). -->
+                                <field name="xml_file" filename="xml_filename"
+                                       widget="spr_preview_binary" options="{'preview': 'xml'}"/>
+                                <field name="xml_filename" invisible="1"/>
+                                <field name="pdf_file" filename="pdf_filename"
+                                       widget="spr_preview_binary" options="{'preview': 'pdf'}"/>
+                                <field name="pdf_filename" invisible="1"/>
+                            </group>
+                        </page>
+                    </notebook>
+                </sheet>
+                <!-- PDF al lado del chatter en pantallas anchas (DECISIONS.md #55). -->
+                <div class="o_attachment_preview"/>
+                <div class="oe_chatter">
+                    <field name="message_follower_ids"/>
+                    <field name="activity_ids"/>
+                    <field name="message_ids"/>
+                </div>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_spr_request_search" model="ir.ui.view">
+        <field name="name">supplier.payment.request.search</field>
+        <field name="model">supplier.payment.request</field>
+        <field name="arch" type="xml">
+            <search string="Solicitudes de pago">
+                <field name="name"/>
+                <field name="partner_id"/>
+                <field name="cufe"/>
+                <field name="invoice_ref"/>
+                <field name="purchase_ids"/>
+                <filter name="filter_draft" string="Borrador" domain="[('state', '=', 'draft')]"/>
+                <filter name="filter_pending" string="Por revisar"
+                        domain="[('state', 'in', ['approved', 'warning'])]"/>
+                <filter name="filter_rejected" string="Rechazadas"
+                        domain="[('state', '=', 'rejected')]"/>
+                <filter name="filter_invoiced" string="Facturadas"
+                        domain="[('state', '=', 'invoiced')]"/>
+                <separator/>
+                <filter name="filter_notes" string="Notas credito y debito"
+                        domain="[('document_type', 'in', ['credit_note', 'debit_note'])]"/>
+                <filter name="filter_support" string="Cuentas de cobro"
+                        domain="[('document_type', '=', 'support_doc')]"/>
+                <filter name="filter_debit_pending" string="Notas debito por aceptar"
+                        domain="[('document_type', '=', 'debit_note'), ('note_accepted_by_id', '=', False), ('state', 'in', ['approved', 'warning'])]"/>
+                <separator/>
+                <filter name="filter_no_move" string="Sin factura creada"
+                        domain="[('move_id', '=', False)]"/>
+                <group expand="0" string="Agrupar por">
+                    <filter name="group_state" string="Estado" context="{'group_by': 'state'}"/>
+                    <filter name="group_partner" string="Proveedor"
+                            context="{'group_by': 'partner_id'}"/>
+                    <filter name="group_type" string="Tipo de documento"
+                            context="{'group_by': 'document_type'}"/>
+                    <filter name="group_date" string="Fecha de envio"
+                            context="{'group_by': 'submitted_date:month'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <!-- Validar con IA desde la lista o el formulario, varias a la vez (DECISIONS.md #51). -->
+    <record id="action_server_spr_validate_ai" model="ir.actions.server">
+        <field name="name">Validar con IA</field>
+        <field name="model_id" ref="model_supplier_payment_request"/>
+        <field name="binding_model_id" ref="model_supplier_payment_request"/>
+        <field name="binding_view_types">list,form</field>
+        <field name="groups_id" eval="[(4, ref('supplier_invoice_portal.group_spr_validator'))]"/>
+        <field name="state">code</field>
+        <field name="code">records.action_validate_ai()</field>
+    </record>
+
+    <record id="action_spr_request" model="ir.actions.act_window">
+        <field name="name">Solicitudes de pago de proveedor</field>
+        <field name="res_model">supplier.payment.request</field>
+        <field name="view_mode">tree,form</field>
+        <field name="search_view_id" ref="view_spr_request_search"/>
+        <field name="context">{'search_default_group_state': 1}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">Todavia no hay solicitudes de pago</p>
+            <p>Los proveedores habilitados radican aqui sus facturas electronicas desde el portal.</p>
+        </field>
+    </record>
+
+    <!-- Smart button en la orden de compra -->
+    <record id="view_purchase_order_form_spr" model="ir.ui.view">
+        <field name="name">purchase.order.form.spr</field>
+        <field name="model">purchase.order</field>
+        <field name="inherit_id" ref="purchase.purchase_order_form"/>
+        <field name="arch" type="xml">
+            <div name="button_box" position="inside">
+                <button name="action_view_spr_requests" type="object" class="oe_stat_button"
+                        icon="fa-file-text-o" invisible="spr_request_count == 0"
+                        groups="supplier_invoice_portal.group_spr_validator">
+                    <field name="spr_request_count" widget="statinfo" string="Solicitudes"/>
+                </button>
+            </div>
+        </field>
+    </record>
+
+    <!-- Flag y smart button en el proveedor -->
+    <record id="view_partner_form_spr" model="ir.ui.view">
+        <field name="name">res.partner.form.spr</field>
+        <field name="model">res.partner</field>
+        <field name="inherit_id" ref="base.view_partner_form"/>
+        <field name="arch" type="xml">
+            <div name="button_box" position="inside">
+                <button name="action_view_spr_requests" type="object" class="oe_stat_button"
+                        icon="fa-file-text-o" invisible="spr_request_count == 0"
+                        groups="supplier_invoice_portal.group_spr_validator">
+                    <field name="spr_request_count" widget="statinfo" string="Solicitudes"/>
+                </button>
+            </div>
+            <!-- Pestana "Portal de proveedor" (DECISIONS.md #42 y #48), solo en el
+                 contacto comercial: el portal lee el indicador de la empresa (o de la
+                 persona natural sin padre), nunca del hijo. En pestana y no junto al
+                 NIT: con base_vat el NIT vive en un div en linea y los campos
+                 quedaban ahi sin etiqueta. -->
+            <xpath expr="//notebook" position="inside">
+                <page name="spr_portal" string="Portal de proveedor"
+                      groups="supplier_invoice_portal.group_spr_manager"
+                      invisible="parent_id and not is_company">
+                    <group name="spr_portal_flags">
+                        <group>
+                            <field name="portal_invoice_enabled"/>
+                            <field name="spr_support_document"
+                                   invisible="not portal_invoice_enabled"/>
+                        </group>
+                    </group>
+                    <!-- Cada documento apunta a un PDF adjunto al contacto (el del
+                         chatter); la vista previa sale de ese adjunto. -->
+                    <group name="spr_documents" string="Documentos del proveedor">
+                        <group>
+                            <field name="spr_doc_rut_id" options="{'no_create': True, 'no_open': True}"/>
+                            <field name="spr_doc_chamber_id" options="{'no_create': True, 'no_open': True}"/>
+                            <field name="spr_doc_bank_cert_id" options="{'no_create': True, 'no_open': True}"/>
+                        </group>
+                        <div class="o_row text-muted" colspan="2">
+                            Adjunte el PDF en el chatter (clip) y eligalo aqui, o deje que el
+                            proveedor lo cargue desde el portal.
+                        </div>
+                    </group>
+                    <group string="RUT" invisible="not spr_doc_rut_id">
+                        <field name="spr_doc_rut_preview" widget="pdf_viewer" nolabel="1" colspan="2"/>
+                    </group>
+                    <group string="Camara de comercio" invisible="not spr_doc_chamber_id">
+                        <field name="spr_doc_chamber_preview" widget="pdf_viewer" nolabel="1" colspan="2"/>
+                    </group>
+                    <group string="Certificacion de cuenta bancaria" invisible="not spr_doc_bank_cert_id">
+                        <field name="spr_doc_bank_cert_preview" widget="pdf_viewer" nolabel="1" colspan="2"/>
+                    </group>
+                </page>
+            </xpath>
+            <xpath expr="//sheet" position="before">
+                <header>
+                    <button name="action_spr_send_instructions" type="object"
+                            string="Enviar instructivo del portal"
+                            groups="supplier_invoice_portal.group_spr_manager"
+                            invisible="not portal_invoice_enabled"/>
+                </header>
+            </xpath>
+        </field>
+    </record>
+
+</odoo>

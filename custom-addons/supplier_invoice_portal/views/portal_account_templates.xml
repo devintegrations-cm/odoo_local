@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- "Edit information" (/my/account) del proveedor habilitado: datos de
+         facturacion electronica (solo si Jorels esta instalado) y documentos.
+         Los valores los pone controllers/portal_account.py (DECISIONS.md #44). -->
+    <template id="portal_my_details_spr" inherit_id="portal.portal_my_details"
+              name="Portal: facturacion y documentos del proveedor">
+        <!-- Sin multipart el navegador no envia los archivos. No afecta al resto
+             del formulario: Odoo lee igual los campos de texto. -->
+        <xpath expr="//form" position="attributes">
+            <attribute name="enctype">multipart/form-data</attribute>
+        </xpath>
+        <xpath expr="//t[@t-call='portal.portal_my_details_fields']" position="after">
+            <t t-if="spr_account_partner">
+                <div class="col-12 mt-4" t-if="spr_jorels_fields">
+                    <h5 class="mb-0">Facturacion electronica</h5>
+                    <small class="text-muted">
+                        Datos de <span t-out="spr_account_partner.name"/> para la factura electronica.
+                    </small>
+                </div>
+                <t t-foreach="spr_jorels_fields" t-as="jf">
+                    <div t-attf-class="mb-3 col-xl-6 #{error.get(jf['name']) and 'o_has_error' or ''}">
+                        <label class="col-form-label label-optional" t-att-for="'spr_' + jf['name']"
+                               t-out="jf['label']"/>
+                        <t t-if="jf['type'] == 'char'">
+                            <input type="email" t-att-name="jf['name']" t-att-id="'spr_' + jf['name']"
+                                   t-attf-class="form-control #{error.get(jf['name']) and 'is-invalid' or ''}"
+                                   t-att-value="jf['value']"/>
+                        </t>
+                        <t t-else="">
+                            <!-- Con esto el campo llega aunque no se marque nada: asi
+                                 se puede dejar un many2many vacio. -->
+                            <input t-if="jf['type'] == 'many2many'" type="hidden"
+                                   t-att-name="jf['name']" value=""/>
+                            <select t-att-name="jf['name']" t-att-id="'spr_' + jf['name']"
+                                    t-att-multiple="'multiple' if jf['type'] == 'many2many' else None"
+                                    t-attf-class="form-select #{error.get(jf['name']) and 'is-invalid' or ''}">
+                                <option t-if="jf['type'] == 'many2one'" value="">Seleccione...</option>
+                                <t t-foreach="jf['options']" t-as="opt">
+                                    <option t-att-value="opt[0]"
+                                            t-att-selected="'selected' if opt[0] in jf['selected'] else None"
+                                            t-out="opt[1]"/>
+                                </t>
+                            </select>
+                        </t>
+                    </div>
+                </t>
+
+                <div class="col-12 mt-4">
+                    <h5 class="mb-0">Documentos</h5>
+                    <small class="text-muted">
+                        Solo PDF sin contrasena, maximo <t t-out="spr_doc_max_mb"/> MB por archivo.
+                        Si no adjunta un archivo, se conserva el que ya estaba.
+                    </small>
+                </div>
+                <t t-foreach="spr_documents" t-as="doc">
+                    <div t-attf-class="mb-3 col-xl-6 #{error.get(doc['name']) and 'o_has_error' or ''}">
+                        <label class="col-form-label label-optional" t-att-for="'spr_' + doc['name']"
+                               t-out="doc['label']"/>
+                        <div t-attf-class="o_spr_dropzone #{error.get(doc['name']) and 'is-invalid' or ''}">
+                            <i class="fa fa-cloud-upload fa-2x text-muted d-block mb-1"/>
+                            <span>Arrastre el archivo aqui o <span class="text-primary">haga clic para elegirlo</span></span>
+                            <div class="o_spr_dropzone_name small fw-bold mt-1"/>
+                            <input type="file" t-att-name="doc['name']" t-att-id="'spr_' + doc['name']"
+                                   t-att-accept="spr_doc_accept"/>
+                        </div>
+                        <small class="form-text text-muted d-block">
+                            <t t-if="doc['filename']">
+                                <i class="fa fa-check text-success"/> Cargado: <span t-out="doc['filename']"/>
+                                <!-- Vista previa (DECISIONS.md #47). El iframe es lazy: no
+                                     se descarga hasta que se despliega. -->
+                                <a class="ms-2" data-bs-toggle="collapse" role="button"
+                                   t-attf-href="#spr_preview_#{doc['name']}">
+                                    <i class="fa fa-eye"/> Ver
+                                </a>
+                                <a class="ms-2" target="_blank"
+                                   t-attf-href="/my/account/document/#{doc['name']}">
+                                    <i class="fa fa-external-link"/> Abrir
+                                </a>
+                            </t>
+                            <t t-else="">Sin documento cargado</t>
+                        </small>
+                        <div t-if="doc['filename']" class="collapse mt-2" t-attf-id="spr_preview_#{doc['name']}">
+                            <iframe t-attf-src="/my/account/document/#{doc['name']}" loading="lazy"
+                                    class="w-100 border rounded" style="height: 28rem;"
+                                    t-att-title="doc['label']"/>
+                        </div>
+                    </div>
+                </t>
+            </t>
+        </xpath>
+    </template>
+
+</odoo>

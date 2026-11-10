@@ -1,0 +1,131 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+Datos de demostracion. Solo se cargan en bases creadas con datos demo.
+
+Reproducen el escenario de los tests: un proveedor habilitado con usuario del
+portal, productos con codigo, una orden de compra confirmada y una solicitud
+ya validada a partir del XML DIAN sintetico de tests/fixtures.
+
+La compania debe trabajar en COP para que la solicitud quede aprobada; en una
+compania en otra moneda queda rechazada por la regla CURRENCY_UNSUPPORTED, lo
+cual tambien sirve para ver las reglas en accion.
+-->
+<odoo>
+    <data noupdate="1">
+
+        <!-- El XML de demo trae un NIT de adquiriente y un CUFE sinteticos:
+             se fija el NIT esperado y se deja explicita la consulta DIAN
+             apagada (ya es el valor por defecto) para que la instalacion con
+             demo nunca haga red. -->
+        <record id="spr_demo_param_company_nit" model="ir.config_parameter">
+            <field name="key">spr.company_nit</field>
+            <field name="value">901234567-8</field>
+        </record>
+        <record id="spr_demo_param_dian_check" model="ir.config_parameter">
+            <field name="key">spr.dian_cufe_check</field>
+            <field name="value">False</field>
+        </record>
+
+        <!-- Proveedor habilitado y su usuario del portal (clave: demo) -->
+        <record id="spr_demo_supplier" model="res.partner">
+            <field name="name">CAFES DEL SUR SAS</field>
+            <field name="is_company" eval="True"/>
+            <field name="vat">900123456-7</field>
+            <field name="email">facturacion@cafesdelsur.example.com</field>
+            <field name="street">Calle 10 # 20-30</field>
+            <field name="city">Medellin</field>
+            <field name="portal_invoice_enabled" eval="True"/>
+            <field name="company_id" eval="False"/>
+        </record>
+        <record id="spr_demo_supplier_user" model="res.users">
+            <field name="name">CAFES DEL SUR SAS</field>
+            <field name="login">proveedor.demo</field>
+            <field name="password">demo</field>
+            <field name="partner_id" ref="spr_demo_supplier"/>
+            <field name="groups_id" eval="[(6, 0, [ref('base.group_portal')])]"/>
+        </record>
+
+        <!-- Impuesto y productos -->
+        <record id="spr_demo_tax_iva_19" model="account.tax">
+            <field name="name">IVA 19% compras (demo SPR)</field>
+            <field name="amount">19.0</field>
+            <field name="amount_type">percent</field>
+            <field name="type_tax_use">purchase</field>
+            <field name="company_id" ref="base.main_company"/>
+        </record>
+        <record id="spr_demo_product_cafe" model="product.product">
+            <field name="name">Cafe verde excelso</field>
+            <field name="default_code">CAFE-001</field>
+            <field name="detailed_type">consu</field>
+            <field name="purchase_method">purchase</field>
+            <field name="supplier_taxes_id" eval="[(6, 0, [ref('spr_demo_tax_iva_19')])]"/>
+        </record>
+        <!-- El empaque se empareja por el codigo del catalogo del proveedor,
+             no por la referencia interna. -->
+        <record id="spr_demo_product_bag" model="product.product">
+            <field name="name">Empaque 500 g</field>
+            <field name="default_code">INT-EMP-500</field>
+            <field name="detailed_type">consu</field>
+            <field name="purchase_method">purchase</field>
+            <field name="supplier_taxes_id" eval="[(6, 0, [ref('spr_demo_tax_iva_19')])]"/>
+        </record>
+        <record id="spr_demo_supplierinfo_bag" model="product.supplierinfo">
+            <field name="partner_id" ref="spr_demo_supplier"/>
+            <field name="product_tmpl_id" model="product.template"
+                   search="[('default_code', '=', 'INT-EMP-500')]"/>
+            <field name="product_code">EMP-500</field>
+            <field name="price">2000.0</field>
+        </record>
+        <record id="spr_demo_product_cafe2" model="product.product">
+            <field name="name">Cafe verde supremo</field>
+            <field name="default_code">CAFE-002</field>
+            <field name="detailed_type">consu</field>
+            <field name="purchase_method">purchase</field>
+            <field name="supplier_taxes_id" eval="[(6, 0, [ref('spr_demo_tax_iva_19')])]"/>
+        </record>
+
+        <!-- Orden de compra confirmada: 100 kg de cafe y 50 empaques -->
+        <record id="spr_demo_po" model="purchase.order">
+            <field name="partner_id" ref="spr_demo_supplier"/>
+            <field name="company_id" ref="base.main_company"/>
+            <field name="date_order" eval="'2026-03-01 10:00:00'"/>
+        </record>
+        <record id="spr_demo_po_line_cafe" model="purchase.order.line">
+            <field name="order_id" ref="spr_demo_po"/>
+            <field name="product_id" ref="spr_demo_product_cafe"/>
+            <field name="name">Cafe verde excelso</field>
+            <field name="product_qty">100</field>
+            <field name="product_uom" ref="uom.product_uom_unit"/>
+            <field name="price_unit">12000</field>
+            <field name="taxes_id" eval="[(6, 0, [ref('spr_demo_tax_iva_19')])]"/>
+            <field name="date_planned" eval="'2026-03-10 10:00:00'"/>
+        </record>
+        <record id="spr_demo_po_line_bag" model="purchase.order.line">
+            <field name="order_id" ref="spr_demo_po"/>
+            <field name="product_id" ref="spr_demo_product_bag"/>
+            <field name="name">Empaque 500 g</field>
+            <field name="product_qty">50</field>
+            <field name="product_uom" ref="uom.product_uom_unit"/>
+            <field name="price_unit">2000</field>
+            <field name="taxes_id" eval="[(6, 0, [ref('spr_demo_tax_iva_19')])]"/>
+            <field name="date_planned" eval="'2026-03-10 10:00:00'"/>
+        </record>
+        <function model="purchase.order" name="button_confirm" eval="[[ref('spr_demo_po')]]"/>
+
+        <!-- Solicitud radicada con el XML DIAN sintetico y validada -->
+        <record id="spr_demo_request" model="supplier.payment.request">
+            <field name="partner_id" ref="spr_demo_supplier"/>
+            <field name="purchase_ids" eval="[(6, 0, [ref('spr_demo_po')])]"/>
+            <field name="company_id" ref="base.main_company"/>
+            <field name="pdf_filename">SETP990000001.pdf</field>
+            <field name="pdf_file">JVBERi0xLjQKJWR1bW15CiUlRU9GCg==</field>
+            <field name="xml_filename">SETP990000001.xml</field>
+            <field name="xml_file" type="base64"
+                   file="supplier_invoice_portal/tests/fixtures/invoice_direct.xml"/>
+            <field name="supplier_note">Factura de la entrega del 15 de marzo.</field>
+        </record>
+        <function model="supplier.payment.request" name="action_validate"
+                  eval="[[ref('spr_demo_request')]]"/>
+
+    </data>
+</odoo>
