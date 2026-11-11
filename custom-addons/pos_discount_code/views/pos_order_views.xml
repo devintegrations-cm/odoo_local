@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<odoo>
+
+    <record id="view_pos_pos_form_discount_code" model="ir.ui.view">
+        <field name="name">pos.order.form.discount.code</field>
+        <field name="model">pos.order</field>
+        <field name="inherit_id" ref="point_of_sale.view_pos_pos_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//page[@name='notes']" position="after">
+                <page string="Descuento" name="discount" invisible="not discount_code">
+                    <group>
+                        <group string="Código de descuento">
+                            <field name="discount_name"/>
+                            <field name="discount_code"/>
+                            <field name="discount_amount" widget="monetary"/>
+                            <field name="discount_state"/>
+                            <field name="discount_vigencia"/>
+                            <field name="discount_redeem_date"/>
+                            <field name="currency_id" invisible="1"/>
+                            <field name="discount_program_id" invisible="1"/>
+                        </group>
+                        <group string="Documento del canje">
+                            <field name="discount_doc_type"/>
+                            <field name="discount_doc_number"/>
+                        </group>
+                    </group>
+                </page>
+            </xpath>
+        </field>
+    </record>
+
+</odoo>

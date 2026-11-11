@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates id="template" xml:space="preserve">
+
+    <t t-name="pos_discount_code.DiscountCodeButton">
+        <button class="control-button btn btn-light rounded-0 fw-bolder" t-on-click="() => this.click()">
+            <i class="fa fa-tag me-1"></i>
+            <span> </span>
+            <span>Código Descuento</span>
+        </button>
+    </t>
+
+    <t t-name="pos_discount_code.DiscountCodePopup">
+        <div class="popup popup-textinput">
+            <div class="modal-header">
+                <h4 class="modal-title" t-if="state.phase === 'form'" t-esc="props.title"/>
+                <h4 class="modal-title" t-else="">Aplicar descuento</h4>
+            </div>
+            <div class="modal-body">
+                <t t-if="state.phase === 'form'">
+                    <div class="mb-3">
+                        <label class="form-label">Tipo de documento</label>
+                        <select class="form-select" t-model="state.docType">
+                            <t t-foreach="docTypes" t-as="dt" t-key="dt.value">
+                                <option t-att-value="dt.value" t-esc="dt.label"/>
+                            </t>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Número de documento</label>
+                        <input class="form-control" type="text" t-model="state.docNumber" t-att-inputmode="docTypeIsNumeric ? 'numeric' : 'text'"
+                               placeholder="Ej: 1032456789"/>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Código de descuento</label>
+                        <input class="form-control" type="text" t-model="state.code"
+                               placeholder="Ej: TEST"/>
+                    </div>
+                </t>
+                <t t-else="">
+                    <div class="alert alert-warning mb-2" t-if="state.replacing">
+                        Se reemplazará el código actual: <b t-esc="state.replacing"/>
+                    </div>
+                    <div class="mb-2">
+                        <strong t-esc="state.preview.name"/>
+                    </div>
+                    <table class="table table-sm">
+                        <tr>
+                            <td>Valor configurado</td>
+                            <td t-esc="state.preview.valorLabel"/>
+                        </tr>
+                        <tr>
+                            <td>Vigencia</td>
+                            <td t-esc="state.preview.vigenciaLabel"/>
+                        </tr>
+                        <tr>
+                            <td>Estado</td>
+                            <td t-esc="state.preview.estadoLabel"/>
+                        </tr>
+                        <tr>
+                            <td>Tipo de documento</td>
+                            <td t-esc="docTypeLabel"/>
+                        </tr>
+                        <tr>
+                            <td>Número de documento</td>
+                            <td t-esc="state.docNumber"/>
+                        </tr>
+                        <tr>
+                            <td>Código</td>
+                            <td t-esc="state.code"/>
+                        </tr>
+                    </table>
+                </t>
+                <div class="text-danger mt-2" t-if="state.error" t-esc="state.error"/>
+            </div>
+            <div class="footer footer-flex modal-footer">
+                <t t-if="state.phase === 'form'">
+                    <div class="button confirm highlight btn btn-lg btn-primary" t-on-click="confirm">
+                        Validar
+                    </div>
+                    <div class="button cancel btn btn-lg btn-secondary" t-on-click="cancel">
+                        Cancelar
+                    </div>
+                </t>
+                <t t-else="">
+                    <div class="button btn btn-lg btn-secondary" t-on-click="backToForm">
+                        Modificar
+                    </div>
+                    <div class="button confirm highlight btn btn-lg btn-primary" t-on-click="confirm">
+                        Aplicar
+                    </div>
+                    <div class="button cancel btn btn-lg btn-secondary" t-on-click="cancel">
+                        Cancelar
+                    </div>
+                </t>
+            </div>
+        </div>
+    </t>
+
+</templates>
